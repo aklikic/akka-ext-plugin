@@ -16,14 +16,15 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. **Setup**: Call `akka_sdd_list_specs` to find the target feature. Identify FEATURE_DIR. Check which artifacts exist: `plan.md`, `spec.md`, or both.
 
-2. **Select mode**:
-   - If `plan.md` exists → **Technical mode** (component diagrams from the plan). Call `akka_sdd_get_template` with `template_name="diagrams"`.
-   - If only `spec.md` exists (no `plan.md`) → **Requirements mode** (non-technical requirement visualizations from the spec). Call `akka_sdd_get_template` with `template_name="spec-diagrams"`. If that template is not found, read `skills/diagrams/spec-diagrams.template.md` from the plugin directory instead.
+2. **Select mode(s)** — spec and plan diagrams are independent artifacts; generate whichever apply:
+   - If `spec.md` exists → run **Requirements mode** (non-technical requirement visualizations). Call `akka_sdd_get_template` with `template_name="spec-diagrams"`. If that template is not found, read `skills/diagrams/spec-diagrams.template.md` from the plugin directory instead.
+   - If `plan.md` exists → run **Technical mode** (component diagrams from the plan). Call `akka_sdd_get_template` with `template_name="diagrams"`.
+   - If both exist → run **both modes**, producing two separate files.
    - If neither exists → report what is missing and stop.
 
 ---
 
-### Requirements Mode (spec.md only)
+### Requirements Mode (spec.md)
 
 3. **Load context**: Read `FEATURE_DIR/spec.md` to extract:
    - All user stories with their priorities, titles, and dependency relationships
@@ -38,13 +39,13 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Diagram 3 — Entity Relationship Map**: ONLY if the spec defines Key Entities; omit entirely otherwise. Show entities and their conceptual relationships (no database details).
    - **Diagram 4 — Status Lifecycle**: ONLY if the spec describes a status lifecycle or state progression; omit entirely otherwise. Show statuses and transitions with triggers.
 
-5. **Write output**: Save diagrams to `FEATURE_DIR/diagrams.md` using the spec-diagrams template structure.
+5. **Write output**: Save diagrams to `FEATURE_DIR/spec-diagrams.md` using the spec-diagrams template structure.
 
-6. **Report**: Output path to generated `diagrams.md` and list which diagrams were generated.
+6. **Report**: Output path to generated `spec-diagrams.md` and list which diagrams were generated.
 
 ---
 
-### Technical Mode (plan.md exists)
+### Technical Mode (plan.md)
 
 3. **Load context**: Read `FEATURE_DIR/plan.md` and `FEATURE_DIR/spec.md` to extract:
    - All components (Workflows, Agents, Views, Endpoints, Consumers, Entities)
@@ -60,9 +61,9 @@ You **MUST** consider the user input before proceeding (if not empty).
      Produce **one numbered subsection per Workflow class** (3.1, 3.2, …), each with its own Mermaid flowchart.
      Title each subsection with the workflow class name (e.g., `### 3.1 OrderWorkflow`).
 
-5. **Write output**: Save diagrams to `FEATURE_DIR/diagrams.md` using the diagrams template structure.
+5. **Write output**: Save diagrams to `FEATURE_DIR/plan-diagrams.md` using the diagrams template structure.
 
-6. **Report**: Output path to generated `diagrams.md` and list which diagrams were generated.
+6. **Report**: Output path to generated `plan-diagrams.md` and list which diagrams were generated.
 
 ---
 

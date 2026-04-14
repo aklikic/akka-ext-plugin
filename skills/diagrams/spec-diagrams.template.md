@@ -1,4 +1,4 @@
-# Requirements Diagrams: [FEATURE]
+# Spec Diagrams: [FEATURE]
 
 **Feature**: [FEATURE] | **Spec**: [link to spec.md]
 
@@ -11,11 +11,19 @@ categories to justify using a color.
 |----------|-------|-----|
 | Primary / P1 stories | blue | `#2196F3` |
 | Secondary / P2 stories | amber | `#FF9800` |
-| Tertiary / P3+ stories | teal | `#009688` |
+| Tertiary / P3+ stories | green | `#4CAF50` |
 | Human actor | green | `#4CAF50` |
-| External / out-of-scope system | grey | `#9E9E9E` |
+| External / out-of-scope system | grey dashed | `#f5f5f5` + `stroke-dasharray:5 5,stroke:#999` |
 | Terminal / failure state | red | `#F44336` |
+| Error / failure state | crimson | `#B71C1C` |
 | Review / decision point | purple | `#9C27B0` |
+
+## External / Out-of-Scope Systems
+
+- Wrap external actors and systems in a subgraph labelled "External" or "Out of Scope"
+- Style every external node with a dashed border:
+    `style NodeId stroke-dasharray:5 5,stroke:#999,fill:#f5f5f5,color:#333`
+- Use dotted arrows (`-.->`) for ALL connections to/from external nodes
 
 ---
 
@@ -48,8 +56,8 @@ flowchart TD
 
     style S1 fill:#2196F3,color:#fff
     style S2 fill:#FF9800,color:#fff
-    style S3 fill:#009688,color:#fff
-    style S4 fill:#009688,color:#fff
+    style S3 fill:#4CAF50,color:#fff
+    style S4 fill:#4CAF50,color:#fff
 ```
 
 ---
@@ -93,6 +101,9 @@ flowchart LR
 
     style A1 fill:#4CAF50,color:#fff
     style A2 fill:#4CAF50,color:#fff
+    style G1 fill:#2196F3,color:#fff
+    style G2 fill:#2196F3,color:#fff
+    style G3 fill:#FF9800,color:#fff
     style E1 stroke-dasharray:5 5,stroke:#999,fill:#f5f5f5,color:#333
 ```
 

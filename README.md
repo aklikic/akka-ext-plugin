@@ -23,8 +23,15 @@ claude --plugin-dir /path/to/akka-ext
 
 ### `diagrams`
 
-Generates three Mermaid diagrams for an Akka SDK feature from its `plan.md` and `spec.md`:
+Generates Mermaid diagrams for an Akka SDK feature. Automatically selects the mode based on available artifacts:
 
+**Requirements mode** (spec.md only, no plan.md):
+1. **User Journey Map** — user stories arranged by priority with dependency relationships
+2. **Actor–Goal Overview** — actors, their goals, and external systems (use-case level)
+3. **Entity Relationship Map** — key entities and conceptual relationships (if defined in spec)
+4. **Status Lifecycle** — state progression with triggers (if defined in spec)
+
+**Technical mode** (plan.md exists):
 1. **Component Dependencies** — flowchart of all components grouped by layer (Endpoint, Workflow, Agent, View, Entity, Consumer)
 2. **Sequence Diagram** — end-to-end flows (happy path, error path, HITL if applicable)
 3. **Workflow State Machines** — one per Workflow class (omitted if no Workflow is used)
@@ -43,8 +50,9 @@ Generates or updates `README.md` at the repository root from SDD artifacts:
 ```
 skills/
 ├── diagrams/
-│   ├── SKILL.md               ← mirrors akka.diagram command
-│   └── diagrams.template.md   ← akka diagrams template (color conventions, shapes)
+│   ├── SKILL.md                    ← mirrors akka.diagram command
+│   ├── plan-diagrams.template.md    ← technical diagrams template (plan.md mode)
+│   └── spec-diagrams.template.md   ← requirements diagrams template (spec.md mode)
 └── readme/
     ├── SKILL.md               ← mirrors akka.readme command
     └── readme.template.md     ← akka README template

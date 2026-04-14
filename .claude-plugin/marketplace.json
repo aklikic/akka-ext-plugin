@@ -1,0 +1,13 @@
+{
+  "name": "akka-ext",
+  "owner": {
+    "name": "Alan"
+  },
+  "plugins": [
+    {
+      "name": "akka-ext",
+      "source": "./",
+      "description": "Skills for generating Mermaid diagrams and README documentation for Akka SDK projects"
+    }
+  ]
+}

@@ -3,11 +3,6 @@ name: readme
 description: Generate or update README.md from SDD artifacts (spec, plan, contracts, diagrams, research). Use when user asks to generate or update the README for an Akka SDK feature.
 allowed-tools: Read, Write, mcp__akka_sdd__akka_sdd_list_specs, mcp__akka_sdd__akka_sdd_get_template
 argument-hint: "[feature name or number]"
-handoffs:
-  - label: Review Implementation
-    agent: akka:review
-    prompt: Review the implementation against the spec
-    send: true
 ---
 
 ## User Input

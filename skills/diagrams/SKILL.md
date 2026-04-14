@@ -1,7 +1,7 @@
 ---
 name: diagrams
 description: Generate Mermaid diagrams for an Akka SDK feature. Works with spec.md (requirement-level visualizations) or plan.md (technical component diagrams). Use when user asks to generate or update diagrams for an Akka SDK feature.
-allowed-tools: Read, Write, mcp__akka_sdd__akka_sdd_list_specs, mcp__akka_sdd__akka_sdd_get_template
+allowed-tools: Read, Write, mcp__akka_sdd__akka_sdd_list_specs
 ---
 
 ## User Input
@@ -17,8 +17,8 @@ You **MUST** consider the user input before proceeding (if not empty).
 1. **Setup**: Call `akka_sdd_list_specs` to find the target feature. Identify FEATURE_DIR. Check which artifacts exist: `plan.md`, `spec.md`, or both.
 
 2. **Select mode(s)** — spec and plan diagrams are independent artifacts; generate whichever apply:
-   - If `spec.md` exists → run **Requirements mode** (non-technical requirement visualizations). Call `akka_sdd_get_template` with `template_name="spec-diagrams"`. If that template is not found, read `skills/diagrams/spec-diagrams.template.md` from the plugin directory instead.
-   - If `plan.md` exists → run **Technical mode** (component diagrams from the plan). Call `akka_sdd_get_template` with `template_name="diagrams"`.
+   - If `spec.md` exists → run **Requirements mode** (non-technical requirement visualizations). Read the template from `skills/diagrams/spec-diagrams.template.md` in the plugin directory.
+   - If `plan.md` exists → run **Technical mode** (component diagrams from the plan). Read the template from `skills/diagrams/plan-diagrams.template.md` in the plugin directory.
    - If both exist → run **both modes**, producing two separate files.
    - If neither exists → report what is missing and stop.
 

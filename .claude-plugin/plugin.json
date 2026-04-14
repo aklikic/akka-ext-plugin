@@ -1,6 +1,6 @@
 {
   "name": "akka-ext",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Skills used ass a extension for generating Mermaid diagrams and README documentation for Akka Specify",
   "author": {
     "name": "Alan"

@@ -24,6 +24,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - `FEATURE_DIR/plan.md` — components, tech stack, project structure, design decisions
    - `FEATURE_DIR/data-model.md` — entities and relationships
    - `FEATURE_DIR/contracts/http-api.md` — endpoints, request/response shapes, curl examples
+   - `FEATURE_DIR/spec-diagrams.md` — user journey, actor–goal, entity map, status lifecycle
    - `FEATURE_DIR/diagrams.md` — component graph, sequence diagram, state machine
    - `FEATURE_DIR/research.md` — key design decisions and rationale
 
@@ -50,7 +51,8 @@ You **MUST** consider the user input before proceeding (if not empty).
       | plan.md | new component / changed architecture | Architecture > Components |
       | data-model.md | new entity / changed fields | Architecture > Data Model |
       | contracts/http-api.md | new endpoint / changed contract | Usage > API Reference |
-      | diagrams.md | updated diagrams | Architecture > Diagrams |
+      | spec-diagrams.md | updated spec diagrams | Architecture > Diagrams |
+      | diagrams.md | updated plan diagrams | Architecture > Diagrams |
       | research.md | new decision | Architecture > Design Decisions |
 
    c. Present the change map to the developer and ask for confirmation:
@@ -96,8 +98,21 @@ You **MUST** consider the user input before proceeding (if not empty).
    - If data-model.md does not exist: omit this subsection.
 
    ### Architecture > Diagrams
-   - If diagrams.md exists: embed all three Mermaid blocks directly.
-   - If diagrams.md does not exist: add a note "Run `/akka.diagram` to generate diagrams."
+   - Embed diagrams from both spec-diagrams and plan-diagrams if they exist.
+   - **Spec diagrams** (spec-diagrams.md): User Journey Map, Actor–Goal Overview,
+     Entity Relationship Map, Status Lifecycle. Uses spec color conventions:
+     P1=blue `#2196F3`, P2=amber `#FF9800`, P3+=green `#4CAF50`,
+     human actor=green, external=grey dashed, failure=red `#F44336`,
+     error=crimson `#B71C1C`, review/decision=purple `#9C27B0`.
+   - **Plan diagrams** (diagrams.md): Component Dependencies, Sequence Diagram,
+     Workflow State Machines. Uses plan color conventions:
+     submission/happy-path=blue `#2196F3`, validation/processing=amber `#FF9800`,
+     safety/blocking=red `#F44336`, HITL/review=purple `#9C27B0`,
+     routing/delivery/success=green `#4CAF50`, error/failure=crimson `#B71C1C`,
+     message broker topics=yellow `#FFF9C4` stroke `#F9A825`.
+   - When embedding Mermaid blocks, preserve ALL `style` and `linkStyle` directives
+     exactly as they appear in the source — do NOT strip or simplify coloring.
+   - If neither diagram file exists: add a note "Run `/akka-ext.diagrams` to generate diagrams."
 
    ### Architecture > Design Decisions
    - Extract key decisions from research.md (decision → rationale, one row per decision).

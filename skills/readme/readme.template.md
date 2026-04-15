@@ -140,15 +140,41 @@ Open [http://localhost:[port]](http://localhost:[port]) in your browser.
 ### Diagrams
 
 <!--
-  Embed or link to diagrams.md.
-  If diagrams.md exists, copy the three mermaid blocks here
-  (Component Dependencies, Sequence Diagram, Workflow State Machine).
-  If diagrams.md does not exist, link to the plan instead.
+  Embed or link to diagram artifacts.
+  Two independent diagram sets may exist — include whichever are present:
+
+  1. Spec diagrams (from spec-diagrams.md or diagrams section in spec.md):
+     User Journey Map, Actor–Goal Overview, Entity Relationship Map, Status Lifecycle.
+     Color conventions:
+       Primary / P1 stories → blue (#2196F3)
+       Secondary / P2 stories → amber (#FF9800)
+       Tertiary / P3+ stories → green (#4CAF50)
+       Human actor → green (#4CAF50)
+       External / out-of-scope → grey dashed (#f5f5f5, stroke-dasharray:5 5, stroke:#999)
+       Terminal / failure state → red (#F44336)
+       Error / failure → crimson (#B71C1C)
+       Review / decision point → purple (#9C27B0)
+
+  2. Plan diagrams (from diagrams.md):
+     Component Dependencies, Sequence Diagram, Workflow State Machines.
+     Color conventions:
+       Submission / happy-path → blue (#2196F3)
+       Validation / processing → amber (#FF9800)
+       Safety / blocking / rejection → red (#F44336)
+       Human-review / approval (HITL) → purple (#9C27B0)
+       Routing / delivery / success → green (#4CAF50)
+       Error / failure → crimson (#B71C1C)
+       Message broker topics → yellow (#FFF9C4, stroke:#F9A825)
+
+  When embedding diagrams, preserve ALL style/color directives exactly as they
+  appear in the source files. Do NOT strip or simplify Mermaid style lines.
+  If neither diagram file exists, link to the feature directory instead.
 -->
 
 See [`specs/[###-feature]/diagrams.md`](specs/[###-feature]/diagrams.md) for:
-- Component dependency graph
-- End-to-end sequence diagram
+- User journey map & actor–goal overview *(spec-level)*
+- Component dependency graph *(plan-level)*
+- End-to-end sequence diagram *(plan-level)*
 - Workflow state machine *(if applicable)*
 
 ### Design Decisions

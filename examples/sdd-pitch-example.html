@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akka Specification-Driven Development</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-section: #131313;
+      --bg-card: #1A1A1A;
+      --bg-code: #111111;
+      --border: #2A2A2A;
+      --border-light: #333333;
+      --text: #FFFFFF;
+      --text-secondary: #AAAAAA;
+      --text-muted: #666666;
+      --yellow: #FFD60A;
+      --yellow-dim: rgba(255,214,10,0.12);
+      --yellow-border: rgba(255,214,10,0.3);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === HERO === */
+    .hero {
+      min-height: 55vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 60px;
+      background: linear-gradient(to bottom right, rgba(0,0,0,1), rgba(19,19,19,1));
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--yellow-border);
+      background: var(--yellow-dim);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--yellow);
+      margin-bottom: 28px;
+      letter-spacing: 0.3px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      max-width: 750px;
+      color: var(--text);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .hero p {
+      margin-top: 24px;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 580px;
+      line-height: 1.7;
+    }
+
+    /* === STICKY TIMELINE === */
+    .timeline {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .timeline-inner::-webkit-scrollbar { display: none; }
+
+    .timeline-step {
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .timeline-step:hover { color: var(--text-secondary); }
+
+    .timeline-step.active {
+      color: var(--yellow);
+      border-bottom-color: var(--yellow);
+    }
+
+    .timeline-step .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .timeline-step.active .num {
+      background: var(--yellow);
+      color: var(--bg);
+    }
+
+    /* === SECTIONS === */
+    .section {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section + .section { border-top: 1px solid var(--border); }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--yellow);
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.25;
+    }
+
+    .section h2 span { color: var(--text-muted); font-weight: 400; }
+
+    .section-desc {
+      margin-top: 14px;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      max-width: 660px;
+    }
+
+    .produces {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 18px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg-card);
+    }
+
+    .produces strong { color: var(--text-secondary); }
+
+    /* === CARDS === */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .card-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .card-body pre {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* === TABS === */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 11px 20px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover { color: var(--text-secondary); }
+
+    .tab-btn.active {
+      color: var(--yellow);
+      border-bottom-color: var(--yellow);
+    }
+
+    .tab-panel { height: 0; overflow: hidden; padding: 0 24px; visibility: hidden; }
+    .tab-panel.active { height: auto; overflow: visible; padding: 24px; visibility: visible; }
+    .tab-panel .mermaid { display: flex; justify-content: center; }
+
+    /* === SYNTAX COLORS === */
+    .kw { color: var(--yellow); }
+    .str { color: #73D677; }
+    .cmt { color: var(--text-muted); font-style: italic; }
+    .type { color: #7EC8E3; }
+    .num { color: #E8A87C; }
+    .fn { color: #E0A2F3; }
+    .ok { color: #73D677; }
+
+    /* === TASK LIST === */
+    .task-list { list-style: none; }
+
+    .task-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(42,42,42,0.6);
+      font-size: 14px;
+    }
+    .task-list li:last-child { border-bottom: none; }
+
+    .task-id {
+      flex-shrink: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--yellow-dim);
+      color: var(--yellow);
+    }
+
+    .task-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(126,200,227,0.12);
+      color: #7EC8E3;
+    }
+
+    .task-tag.story { background: rgba(224,162,243,0.12); color: #E0A2F3; }
+
+    .task-text { color: var(--text-secondary); }
+    .task-file { color: var(--text-muted); font-family: var(--mono); font-size: 12px; }
+
+    /* === Q&A === */
+    .qa-item {
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(42,42,42,0.6);
+    }
+    .qa-item:last-child { border-bottom: none; }
+
+    .qa-q {
+      font-weight: 600;
+      color: var(--yellow);
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .qa-a {
+      color: var(--text-secondary);
+      padding-left: 0;
+      font-size: 14px;
+    }
+    .qa-a strong { color: var(--text); }
+
+    /* === CODE BLOCK === */
+    .code-block {
+      background: var(--bg-code);
+      padding: 24px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    /* === FOOTER === */
+    .footer {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .footer a { color: var(--yellow); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 767px) {
+      .hero { padding: 70px 16px 40px; }
+      .section { padding: 50px 16px; }
+      .timeline-step { min-width: 100px; font-size: 12px; padding: 12px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">Akka SDD Workflow</div>
+  <h1>Specification-Driven <em>Development</em></h1>
+  <p>Go from a one-line idea to a production-ready Akka service in five structured steps. Each step produces a versioned artifact that feeds the next.</p>
+</section>
+
+<!-- Sticky Timeline -->
+<nav class="timeline">
+  <div class="timeline-inner">
+    <a class="timeline-step active" href="#specify" data-section="specify"><span class="num">1</span> Specify</a>
+    <a class="timeline-step" href="#clarify" data-section="clarify"><span class="num">2</span> Clarify</a>
+    <a class="timeline-step" href="#plan" data-section="plan"><span class="num">3</span> Plan</a>
+    <a class="timeline-step" href="#tasks" data-section="tasks"><span class="num">4</span> Tasks</a>
+    <a class="timeline-step" href="#implement" data-section="implement"><span class="num">5</span> Implement</a>
+  </div>
+</nav>
+
+<!-- ============ STEP 1: SPECIFY ============ -->
+<section class="section" id="specify">
+  <div class="section-label">Step 1</div>
+  <h2>/specify <span>— capture the what</span></h2>
+  <p class="section-desc">Describe your feature in plain language. The AI generates a structured specification with user stories, acceptance scenarios, requirements, and success criteria.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; spec.md + spec-diagrams.md</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Input &mdash; your one-liner</div>
+    <div class="card-body">
+      <pre>"Build a loan underwriting service with two-stage AI pipeline
+(Compliance Check + Credit Check), queryable status, and a simple UI."</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><span class="dot"></span> Output &mdash; spec.md (excerpt)</div>
+    <div class="card-body">
+      <pre><span class="kw">### User Story 2 — Automated Underwriting Pipeline (P1)</span>
+
+Once submitted, the system runs a two-stage AI-powered pipeline.
+First, a Compliance Check screens against a blocked list.
+If passed, a Credit Check evaluates the financial profile.
+
+<span class="kw">Acceptance Scenarios:</span>
+
+<span class="num">1.</span> <span class="str">Given</span> a non-blocked applicant with score 750, DTI 25%, LTI 3x
+   <span class="str">When</span> the pipeline runs
+   <span class="str">Then</span> compliance passes, credit = LOW risk → <span class="type">APPROVED</span>
+
+<span class="num">2.</span> <span class="str">Given</span> an applicant on the blocked list
+   <span class="str">When</span> the pipeline runs
+   <span class="str">Then</span> compliance fails, no credit check → <span class="type">DECLINED</span>
+
+<span class="num">3.</span> <span class="str">Given</span> a non-blocked applicant with score 650, DTI 38%, LTI 5x
+   <span class="str">When</span> the pipeline runs
+   <span class="str">Then</span> credit = MEDIUM risk → <span class="type">REFERRED</span> (awaits review)</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="tabs" data-tabgroup="spec">
+      <button class="tab-btn active" data-tab="spec-journey">User Journey</button>
+      <button class="tab-btn" data-tab="spec-actors">Actor — Goal</button>
+      <button class="tab-btn" data-tab="spec-lifecycle">Status Lifecycle</button>
+    </div>
+    <div class="tab-panel active" data-tab="spec-journey">
+      <pre class="mermaid">
+flowchart TD
+    S1([P1: Submit Application])
+    S2([P1: Underwriting Pipeline])
+    S3([P1: Human Review])
+    S4([P1: Query Status])
+    S5([P2: Web UI])
+    S6([P2: AI Safety])
+    S1 -->|"triggers"| S2
+    S2 -->|"MEDIUM risk"| S3
+    S1 -->|"enables"| S4
+    S2 -->|"results for"| S4
+    S3 -->|"decision for"| S4
+    S5 -->|"interface for"| S1
+    S5 -->|"displays"| S4
+    S5 -->|"enables"| S3
+    S6 -->|"protects"| S2
+    style S1 fill:#FFD60A,color:#000
+    style S2 fill:#FFD60A,color:#000
+    style S3 fill:#FFD60A,color:#000
+    style S4 fill:#FFD60A,color:#000
+    style S5 fill:#333,color:#fff
+    style S6 fill:#333,color:#fff
+      </pre>
+    </div>
+    <div class="tab-panel" data-tab="spec-actors">
+      <pre class="mermaid">
+flowchart LR
+    subgraph actors["Actors"]
+        A1([Applicant])
+        A2([Reviewer])
+    end
+    subgraph system["Loan Underwriting Service"]
+        G1[Submit application]
+        G2[Compliance check]
+        G3[Credit check]
+        G4[Produce decision]
+        G5[Review referred]
+        G6[Track status]
+    end
+    A1 -->|"submits"| G1
+    A1 -->|"streams status"| G6
+    A2 -->|"views all"| G6
+    A2 -->|"approves/declines"| G5
+    G1 -->|"initiates"| G2
+    G2 -->|"if passed"| G3
+    G3 -->|"determines"| G4
+    G4 -->|"MEDIUM"| G5
+    style A1 fill:#FFD60A,color:#000
+    style A2 fill:#FFD60A,color:#000
+    style G1 fill:#333,color:#fff
+    style G2 fill:#333,color:#fff
+    style G3 fill:#333,color:#fff
+    style G4 fill:#333,color:#fff
+    style G5 fill:#555,color:#fff
+    style G6 fill:#333,color:#fff
+      </pre>
+    </div>
+    <div class="tab-panel" data-tab="spec-lifecycle">
+      <pre class="mermaid">
+flowchart TD
+    SUBMITTED([SUBMITTED]) --> PROCESSING[PROCESSING]
+    PROCESSING -->|"compliance fails"| DECLINED_CF([DECLINED])
+    PROCESSING -->|"compliance passes"| RISK{Risk Grade?}
+    RISK -->|"LOW"| APPROVED([APPROVED])
+    RISK -->|"MEDIUM"| REFERRED[REFERRED]
+    RISK -->|"HIGH"| DECLINED_HI([DECLINED])
+    PROCESSING -->|"failure"| DECLINED_ERR([DECLINED])
+    REFERRED -->|"approve"| APPROVED_REV([APPROVED])
+    REFERRED -->|"decline"| DECLINED_REV([DECLINED])
+    style SUBMITTED fill:#FFD60A,color:#000
+    style PROCESSING fill:#555,color:#fff
+    style RISK fill:#444,color:#fff
+    style REFERRED fill:#444,color:#fff
+    style APPROVED fill:#73D677,color:#000
+    style APPROVED_REV fill:#73D677,color:#000
+    style DECLINED_CF fill:#E05555,color:#fff
+    style DECLINED_HI fill:#E05555,color:#fff
+    style DECLINED_ERR fill:#E05555,color:#fff
+    style DECLINED_REV fill:#E05555,color:#fff
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEP 2: CLARIFY ============ -->
+<section class="section" id="clarify">
+  <div class="section-label">Step 2</div>
+  <h2>/clarify <span>— fill the gaps</span></h2>
+  <p class="section-desc">The AI reads the spec, identifies up to 5 underspecified areas, asks targeted questions, and encodes answers back into the spec.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; updated spec.md (gaps filled)</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Example &mdash; clarification Q&amp;A</div>
+    <div class="card-body">
+      <div class="qa-item">
+        <div class="qa-q">Q1 — How should credit bureau data be sourced?</div>
+        <div class="qa-a"><strong>Answer:</strong> Use stub services returning deterministic data by applicant name. The credit agent fetches score and debt via <code>@FunctionTool</code>, not from the form.</div>
+      </div>
+      <div class="qa-item">
+        <div class="qa-q">Q2 — What happens when a guardrail blocks an agent interaction?</div>
+        <div class="qa-a"><strong>Answer:</strong> The compliance step catches the guardrail exception directly and declines with a clear explanation — no retries wasted.</div>
+      </div>
+      <div class="qa-item">
+        <div class="qa-q">Q3 — Should MEDIUM-risk applications auto-expire?</div>
+        <div class="qa-a"><strong>Answer:</strong> No. The workflow stays in REFERRED status indefinitely until a reviewer acts. No automatic timeout initially.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEP 3: PLAN ============ -->
+<section class="section" id="plan">
+  <div class="section-label">Step 3</div>
+  <h2>/plan <span>— design the how</span></h2>
+  <p class="section-desc">Translates the spec into Akka component architecture: SDK primitives, data model, interactions, project structure, and key design decisions. Verified against the Akka constitution.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; plan.md + plan-diagrams.md + data-model.md + research.md + contracts/</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Output &mdash; plan.md (excerpt)</div>
+    <div class="card-body">
+      <pre><span class="kw">## Component Design</span>
+
+<span class="cmt">### UnderwritingWorkflow (Workflow)</span>
+- Extends Workflow&lt;LoanApplication&gt;
+- Holds all application state — no separate entity needed
+- Steps: complianceStep → creditStep → decisionStep
+- Settings: defaultStepTimeout(120s), maxRetries(2)
+
+<span class="cmt">### ComplianceCheckAgent (Agent)</span>
+- @FunctionTool: isBlocked(applicantName) → BlockedListService
+- Returns structured ComplianceResult via responseConformsTo()
+
+<span class="cmt">### CreditCheckAgent (Agent)</span>
+- @FunctionTool: getCreditReport(name) → CreditBureauService
+- @FunctionTool: getLoanPolicy() → LoanPolicyService
+- Returns structured CreditResult via responseConformsTo()
+
+<span class="cmt">### LoanApplicationView (View)</span>
+- Projects workflow state for list queries + SSE streaming</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="tabs" data-tabgroup="plan">
+      <button class="tab-btn active" data-tab="plan-components">Component Graph</button>
+      <button class="tab-btn" data-tab="plan-workflow">Workflow States</button>
+    </div>
+    <div class="tab-panel active" data-tab="plan-components">
+      <pre class="mermaid">
+flowchart TD
+    subgraph api["API Layer"]
+        WEB[WebEndpoint]
+        EP[LoanApplicationEndpoint]
+    end
+    subgraph app["Application Layer"]
+        WF[UnderwritingWorkflow]
+        CA[ComplianceCheckAgent]
+        XA[CreditCheckAgent]
+        BLS[BlockedListService]
+        CBS[CreditBureauService]
+        LPS[LoanPolicyService]
+        VW[LoanApplicationView]
+    end
+    subgraph guard["Guardrails"]
+        JG[JailbreakGuard]
+        FAG[FinancialAdviceGuard]
+    end
+    EP -->|"start / get"| WF
+    EP -->|"review"| WF
+    EP -->|"list / stream"| VW
+    WF -->|"check"| CA
+    WF -->|"check"| XA
+    CA -->|"tool"| BLS
+    XA -->|"tool"| CBS
+    XA -->|"tool"| LPS
+    JG -.->|"input"| CA
+    JG -.->|"input"| XA
+    FAG -.->|"output"| CA
+    FAG -.->|"output"| XA
+    WF -->|"projects to"| VW
+    style WEB fill:#333,color:#fff
+    style EP fill:#FFD60A,color:#000
+    style WF fill:#FFD60A,color:#000
+    style CA fill:#7EC8E3,color:#000
+    style XA fill:#7EC8E3,color:#000
+    style BLS fill:#555,color:#fff
+    style CBS fill:#555,color:#fff
+    style LPS fill:#555,color:#fff
+    style VW fill:#73D677,color:#000
+    style JG fill:#E05555,color:#fff
+    style FAG fill:#E05555,color:#fff
+      </pre>
+    </div>
+    <div class="tab-panel" data-tab="plan-workflow">
+      <pre class="mermaid">
+flowchart TD
+    START([START]) -->|"start()"| CS
+    CS[complianceStep] -->|"passed"| XS
+    CS -->|"failed / guardrail"| DEC_D
+    XS[creditStep] -->|"result"| DEC
+    DEC[decisionStep] -->|"LOW"| OK([APPROVED])
+    DEC -->|"MEDIUM"| REF[REFERRED]
+    DEC -->|"HIGH"| NO1([DECLINED])
+    REF -->|"approve"| OK2([APPROVED])
+    REF -->|"decline"| NO2([DECLINED])
+    DEC_D --> NO3([DECLINED])
+    CS -->|"retries exhausted"| ERR
+    XS -->|"retries exhausted"| ERR
+    ERR[errorStep] --> NO4([DECLINED])
+    style START fill:#FFD60A,color:#000
+    style CS fill:#555,color:#fff
+    style XS fill:#555,color:#fff
+    style DEC fill:#555,color:#fff
+    style DEC_D fill:#E05555,color:#fff
+    style REF fill:#444,color:#fff
+    style OK fill:#73D677,color:#000
+    style OK2 fill:#73D677,color:#000
+    style NO1 fill:#E05555,color:#fff
+    style NO2 fill:#E05555,color:#fff
+    style NO3 fill:#E05555,color:#fff
+    style NO4 fill:#E05555,color:#fff
+    style ERR fill:#E05555,color:#fff
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEP 4: TASKS ============ -->
+<section class="section" id="tasks">
+  <div class="section-label">Step 4</div>
+  <h2>/tasks <span>— break it down</span></h2>
+  <p class="section-desc">Generates a dependency-ordered task list grouped by phase. Each task maps to a user story, marks parallelizable work, and includes exact file paths.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; tasks.md</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Output &mdash; tasks.md (sample)</div>
+    <div class="card-body">
+      <ul class="task-list">
+        <li>
+          <span class="task-id">T004</span>
+          <span class="task-tag">Parallel</span>
+          <span class="task-text">Create Status enum <span class="task-file">domain/Status.java</span></span>
+        </li>
+        <li>
+          <span class="task-id">T011</span>
+          <span class="task-text">Create LoanApplication state record with Optional fields, with* methods <span class="task-file">domain/LoanApplication.java</span></span>
+        </li>
+        <li>
+          <span class="task-id">T012</span>
+          <span class="task-text">Create LoanApplicationTest unit tests <span class="task-file">domain/LoanApplicationTest.java</span></span>
+        </li>
+        <li style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+          <span class="task-id">T019</span>
+          <span class="task-tag story">US2</span>
+          <span class="task-text">Create ComplianceCheckAgent with @FunctionTool, responseConformsTo <span class="task-file">application/ComplianceCheckAgent.java</span></span>
+        </li>
+        <li>
+          <span class="task-id">T020</span>
+          <span class="task-tag story">US2</span>
+          <span class="task-text">Create CreditCheckAgent with two @FunctionTools <span class="task-file">application/CreditCheckAgent.java</span></span>
+        </li>
+        <li>
+          <span class="task-id">T021</span>
+          <span class="task-tag story">US2</span>
+          <span class="task-text">Update UnderwritingWorkflow with full step implementations <span class="task-file">application/UnderwritingWorkflow.java</span></span>
+        </li>
+        <li style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+          <span class="task-id">T029</span>
+          <span class="task-tag story">US4</span>
+          <span class="task-text">Create LoanApplicationView with SSE streaming <span class="task-file">application/LoanApplicationView.java</span></span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEP 5: IMPLEMENT ============ -->
+<section class="section" id="implement">
+  <div class="section-label">Step 5</div>
+  <h2>/implement <span>— execute the plan</span></h2>
+  <p class="section-desc">Walks through tasks in order, generating production-ready code one component at a time. Compiles after each phase, runs tests, stops for approval.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; working Akka service with tests</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Output &mdash; CreditCheckAgent.java</div>
+    <div class="code-block">
+      <pre><span class="kw">@Component</span>(id = <span class="str">"credit-check-agent"</span>)
+<span class="kw">public class</span> <span class="type">CreditCheckAgent</span> <span class="kw">extends</span> <span class="type">Agent</span> {
+
+  <span class="kw">public</span> <span class="type">Effect</span>&lt;<span class="type">CreditResult</span>&gt; <span class="fn">check</span>(<span class="type">CreditCheckRequest</span> request) {
+    <span class="kw">return</span> effects()
+        .systemMessage(<span class="str">"""
+            You are a credit assessment agent.
+            1. Fetch credit report via getCreditReport tool
+            2. Fetch loan policy via getLoanPolicy tool
+            3. Calculate DTI and LTI ratios
+            4. Evaluate against policy thresholds
+            """</span>)
+        .userMessage(<span class="str">"Evaluate: %s, income: %d, loan: %d"</span>
+            .formatted(request.applicantName(),
+                       request.annualIncome(),
+                       request.requestedLoanAmount()))
+        .responseConformsTo(<span class="type">CreditResult</span>.class)
+        .thenReply();
+  }
+
+  <span class="kw">@FunctionTool</span>(description = <span class="str">"Fetch credit report"</span>)
+  <span class="kw">public</span> <span class="type">String</span> <span class="fn">getCreditReport</span>(<span class="type">String</span> name) {
+    <span class="kw">var</span> report = creditBureauService.getCreditReport(name);
+    <span class="kw">return</span> <span class="str">"Score: %d, debt: %d"</span>
+        .formatted(report.creditScore(), report.existingDebt());
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><span class="dot"></span> Workflow &mdash; incremental build loop</div>
+    <div class="card-body">
+      <pre><span class="cmt">Phase 2: Domain Layer</span>
+  <span class="ok">&#10003;</span> Created 8 domain records          <span class="fn">mvn compile</span> — <span class="ok">BUILD SUCCESS</span>
+  <span class="ok">&#10003;</span> Created LoanApplicationTest        <span class="fn">mvn test</span>    — <span class="ok">8 tests passed</span>
+  <span class="kw">&gt; Ready for Application Layer?</span>       <span class="cmt">← waits for approval</span>
+
+<span class="cmt">Phase 4: Underwriting Pipeline</span>
+  <span class="ok">&#10003;</span> Created ComplianceCheckAgent       <span class="fn">mvn compile</span> — <span class="ok">BUILD SUCCESS</span>
+  <span class="ok">&#10003;</span> Created CreditCheckAgent           <span class="fn">mvn compile</span> — <span class="ok">BUILD SUCCESS</span>
+  <span class="ok">&#10003;</span> Updated UnderwritingWorkflow       <span class="fn">mvn compile</span> — <span class="ok">BUILD SUCCESS</span>
+  <span class="ok">&#10003;</span> Created agent + workflow tests     <span class="fn">mvn verify</span>  — <span class="ok">16 tests passed</span>
+  <span class="kw">&gt; Ready for API Layer?</span>              <span class="cmt">← waits for approval</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  Built with <a href="https://akka.io">Akka</a> — Specification-Driven Development
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#FFD60A',
+      primaryTextColor: '#ffffff',
+      primaryBorderColor: '#2A2A2A',
+      lineColor: '#666666',
+      secondaryColor: '#1A1A1A',
+      tertiaryColor: '#131313',
+      background: '#1A1A1A',
+      mainBkg: '#1A1A1A',
+      nodeBorder: '#2A2A2A',
+      clusterBkg: 'rgba(42,42,42,0.3)',
+      clusterBorder: '#2A2A2A',
+      titleColor: '#ffffff',
+      edgeLabelBackground: '#1A1A1A'
+    },
+    flowchart: { padding: 16 },
+    fontSize: 13
+  });
+
+  // Render all mermaid diagrams with panels temporarily visible
+  (async () => {
+    // Make all panels visible for rendering
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('active'));
+    await mermaid.run();
+    // Restore: hide non-first panels
+    document.querySelectorAll('.card').forEach(card => {
+      const panels = card.querySelectorAll('.tab-panel');
+      panels.forEach((p, i) => { if (i > 0) p.classList.remove('active'); });
+    });
+  })();
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.card');
+      card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      card.querySelector(`.tab-panel[data-tab="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  // Scroll spy for timeline
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.timeline-step');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`.timeline-step[data-section="${entry.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

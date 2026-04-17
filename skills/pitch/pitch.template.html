@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PITCH_TITLE</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-section: #131313;
+      --bg-card: #1A1A1A;
+      --bg-code: #111111;
+      --border: #2A2A2A;
+      --border-light: #333333;
+      --text: #FFFFFF;
+      --text-secondary: #AAAAAA;
+      --text-muted: #666666;
+      --yellow: #FFD60A;
+      --yellow-dim: rgba(255,214,10,0.12);
+      --yellow-border: rgba(255,214,10,0.3);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === HERO === */
+    .hero {
+      min-height: 55vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 60px;
+      background: linear-gradient(to bottom right, rgba(0,0,0,1), rgba(19,19,19,1));
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--yellow-border);
+      background: var(--yellow-dim);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--yellow);
+      margin-bottom: 28px;
+      letter-spacing: 0.3px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      max-width: 750px;
+      color: var(--text);
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .hero p {
+      margin-top: 24px;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 580px;
+      line-height: 1.7;
+    }
+
+    /* === STICKY TIMELINE === */
+    .timeline {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .timeline-inner::-webkit-scrollbar { display: none; }
+
+    .timeline-step {
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .timeline-step:hover { color: var(--text-secondary); }
+
+    .timeline-step.active {
+      color: var(--yellow);
+      border-bottom-color: var(--yellow);
+    }
+
+    .timeline-step .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .timeline-step.active .num {
+      background: var(--yellow);
+      color: var(--bg);
+    }
+
+    /* === SECTIONS === */
+    .section {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section + .section { border-top: 1px solid var(--border); }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--yellow);
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.25;
+    }
+
+    .section h2 span { color: var(--text-muted); font-weight: 400; }
+
+    .section-desc {
+      margin-top: 14px;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      max-width: 660px;
+    }
+
+    .produces {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 18px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg-card);
+    }
+
+    .produces strong { color: var(--text-secondary); }
+
+    /* === CARDS === */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .card-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .card-body pre {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* === TABS === */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 11px 20px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover { color: var(--text-secondary); }
+
+    .tab-btn.active {
+      color: var(--yellow);
+      border-bottom-color: var(--yellow);
+    }
+
+    .tab-panel { height: 0; overflow: hidden; padding: 0 24px; visibility: hidden; }
+    .tab-panel.active { height: auto; overflow: visible; padding: 24px; visibility: visible; }
+    .tab-panel .mermaid { display: flex; justify-content: center; }
+
+    /* === SYNTAX COLORS === */
+    .kw { color: var(--yellow); }
+    .str { color: #73D677; }
+    .cmt { color: var(--text-muted); font-style: italic; }
+    .type { color: #7EC8E3; }
+    .num { color: #E8A87C; }
+    .fn { color: #E0A2F3; }
+    .ok { color: #73D677; }
+
+    /* === TASK LIST === */
+    .task-list { list-style: none; }
+
+    .task-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(42,42,42,0.6);
+      font-size: 14px;
+    }
+    .task-list li:last-child { border-bottom: none; }
+
+    .task-id {
+      flex-shrink: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--yellow-dim);
+      color: var(--yellow);
+    }
+
+    .task-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(126,200,227,0.12);
+      color: #7EC8E3;
+    }
+
+    .task-tag.story { background: rgba(224,162,243,0.12); color: #E0A2F3; }
+
+    .task-text { color: var(--text-secondary); }
+    .task-file { color: var(--text-muted); font-family: var(--mono); font-size: 12px; }
+
+    /* === Q&A === */
+    .qa-item {
+      padding: 20px 0;
+      border-bottom: 1px solid rgba(42,42,42,0.6);
+    }
+    .qa-item:last-child { border-bottom: none; }
+
+    .qa-q {
+      font-weight: 600;
+      color: var(--yellow);
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .qa-a {
+      color: var(--text-secondary);
+      padding-left: 0;
+      font-size: 14px;
+    }
+    .qa-a strong { color: var(--text); }
+
+    /* === CODE BLOCK === */
+    .code-block {
+      background: var(--bg-code);
+      padding: 24px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    /* === FOOTER === */
+    .footer {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .footer a { color: var(--yellow); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 767px) {
+      .hero { padding: 70px 16px 40px; }
+      .section { padding: 50px 16px; }
+      .timeline-step { min-width: 100px; font-size: 12px; padding: 12px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">PITCH_BADGE</div>
+  <h1>PITCH_TITLE</h1>
+  <p>PITCH_SUBTITLE</p>
+</section>
+
+<!-- Sticky Timeline -->
+<nav class="timeline">
+  <div class="timeline-inner">
+    <a class="timeline-step active" href="#specify" data-section="specify"><span class="num">1</span> Specify</a>
+    <a class="timeline-step" href="#clarify" data-section="clarify"><span class="num">2</span> Clarify</a>
+    <a class="timeline-step" href="#plan" data-section="plan"><span class="num">3</span> Plan</a>
+    <a class="timeline-step" href="#tasks" data-section="tasks"><span class="num">4</span> Tasks</a>
+    <a class="timeline-step" href="#implement" data-section="implement"><span class="num">5</span> Implement</a>
+  </div>
+</nav>
+
+<!-- ============ STEP 1: SPECIFY ============ -->
+<section class="section" id="specify">
+  <div class="section-label">Step 1</div>
+  <h2>/specify <span>&mdash; capture the what</span></h2>
+  <p class="section-desc">Describe your feature in plain language. The AI generates a structured specification with user stories, acceptance scenarios, requirements, and success criteria.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; spec.md + spec-diagrams.md</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Input &mdash; your one-liner</div>
+    <div class="card-body">
+      <pre>SPECIFY_INPUT</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><span class="dot"></span> Output &mdash; spec.md (excerpt)</div>
+    <div class="card-body">
+      <pre>SPECIFY_OUTPUT</pre>
+    </div>
+  </div>
+
+  <!-- Spec Diagrams (tabs) — include only if spec-diagrams.md exists -->
+  SPECIFY_DIAGRAMS
+</section>
+
+<!-- ============ STEP 2: CLARIFY ============ -->
+<section class="section" id="clarify">
+  <div class="section-label">Step 2</div>
+  <h2>/clarify <span>&mdash; fill the gaps</span></h2>
+  <p class="section-desc">The AI reads the spec, identifies up to 5 underspecified areas, asks targeted questions, and encodes answers back into the spec.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; updated spec.md (gaps filled)</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Example &mdash; clarification Q&amp;A</div>
+    <div class="card-body">
+      CLARIFY_QA
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEP 3: PLAN ============ -->
+<section class="section" id="plan">
+  <div class="section-label">Step 3</div>
+  <h2>/plan <span>&mdash; design the how</span></h2>
+  <p class="section-desc">Translates the spec into Akka component architecture: SDK primitives, data model, interactions, project structure, and key design decisions. Verified against the Akka constitution.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; plan.md + plan-diagrams.md + data-model.md + research.md + contracts/</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Output &mdash; plan.md (excerpt)</div>
+    <div class="card-body">
+      <pre>PLAN_OUTPUT</pre>
+    </div>
+  </div>
+
+  <!-- Plan Diagrams (tabs) — include only if plan-diagrams.md exists -->
+  PLAN_DIAGRAMS
+</section>
+
+<!-- ============ STEP 4: TASKS ============ -->
+<section class="section" id="tasks">
+  <div class="section-label">Step 4</div>
+  <h2>/tasks <span>&mdash; break it down</span></h2>
+  <p class="section-desc">Generates a dependency-ordered task list grouped by phase. Each task maps to a user story, marks parallelizable work, and includes exact file paths.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; tasks.md</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Output &mdash; tasks.md (sample)</div>
+    <div class="card-body">
+      <ul class="task-list">
+        TASKS_LIST
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEP 5: IMPLEMENT ============ -->
+<section class="section" id="implement">
+  <div class="section-label">Step 5</div>
+  <h2>/implement <span>&mdash; execute the plan</span></h2>
+  <p class="section-desc">Walks through tasks in order, generating production-ready code one component at a time. Compiles after each phase, runs tests, stops for approval.</p>
+  <div class="produces"><strong>Produces:</strong>&nbsp; working Akka service with tests</div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span> Output &mdash; IMPLEMENT_COMPONENT_NAME</div>
+    <div class="code-block">
+      <pre>IMPLEMENT_CODE</pre>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><span class="dot"></span> Workflow &mdash; incremental build loop</div>
+    <div class="card-body">
+      <pre>IMPLEMENT_BUILD_LOOP</pre>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  Built with <a href="https://akka.io">Akka</a> &mdash; Specification-Driven Development
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#FFD60A',
+      primaryTextColor: '#ffffff',
+      primaryBorderColor: '#2A2A2A',
+      lineColor: '#666666',
+      secondaryColor: '#1A1A1A',
+      tertiaryColor: '#131313',
+      background: '#1A1A1A',
+      mainBkg: '#1A1A1A',
+      nodeBorder: '#2A2A2A',
+      clusterBkg: 'rgba(42,42,42,0.3)',
+      clusterBorder: '#2A2A2A',
+      titleColor: '#ffffff',
+      edgeLabelBackground: '#1A1A1A'
+    },
+    flowchart: { padding: 16 },
+    fontSize: 13
+  });
+
+  // Render all mermaid diagrams with panels temporarily visible
+  (async () => {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('active'));
+    await mermaid.run();
+    document.querySelectorAll('.card').forEach(card => {
+      const panels = card.querySelectorAll('.tab-panel');
+      panels.forEach((p, i) => { if (i > 0) p.classList.remove('active'); });
+    });
+  })();
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.card');
+      card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      card.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      card.querySelector(`.tab-panel[data-tab="${btn.dataset.tab}"]`).classList.add('active');
+    });
+  });
+
+  // Scroll spy for timeline
+  const sections = document.querySelectorAll('.section[id]');
+  const navLinks = document.querySelectorAll('.timeline-step');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`.timeline-step[data-section="${entry.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>

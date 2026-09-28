@@ -17,6 +17,78 @@ Professional but direct. Lead with value, not technology. Use tables over prose 
 
 ---
 
+## Core Principles
+
+### Self-Contained POC
+
+Every POC must run standalone on a developer laptop with zero external dependencies. This is non-negotiable — it ensures the demo works reliably in any environment, removes setup friction, and lets the customer focus on what Akka does rather than debugging connectivity.
+
+What this means in practice:
+- **All external systems are mocked** — databases, APIs, message brokers, third-party services. Mocks return realistic data with configurable latency and failure rates.
+- **All AI/LLM dependencies are mockable** — if the POC uses Agents, provide a mock model mode that returns fixed responses with realistic latency (~200-500ms). This is critical for performance testing — you cannot benchmark throughput against a real LLM with rate limits and variable latency.
+- **Single command to run** — `mvn compile exec:java` starts everything. No Docker compose, no external databases, no API keys required for the basic demo flow.
+- **Mocks are replaceable by configuration** — swapping a mock for a real service is a URL change in config, not a code change. This makes the "After the POC" path credible.
+
+### Performance Testing with Gatling Enterprise
+
+When scalability/throughput is a goal, the POC includes performance testing using **Gatling Enterprise**:
+
+- **Gatling simulations** are a separate Maven module (e.g., `performance-tests/`) — not part of the Akka service itself
+- **Two simulation types**:
+  - **Smoke test** — small number of requests to verify the deployed service works end-to-end
+  - **Load test** — sustained TPS at target throughput, measuring latency percentiles and error rates
+- **Test against deployed service** — the Akka service and its stub dependencies are deployed to the **Akka Platform**. Gatling runs against the deployed service URL, not localhost. This proves real infrastructure behavior, not just local performance.
+- **Stub services deploy alongside** — mock/stub external dependencies are packaged as a separate Akka service and deployed to the platform. This gives realistic network latency between the main service and its dependencies.
+- **Configurable parameters** — simulations accept system properties for `BASE_URL`, `RATE_PER_SEC`, `DURATION`, `RAMP_UP`, and any domain-specific parameters (e.g., `ACCOUNT_POOL_SIZE` for cache hit ratio tuning)
+- **Gatling Enterprise packaging** — simulations are packaged as a fat JAR (`mvn gatling:enterprisePackage`) for upload to Gatling Enterprise, enabling distributed load generation and rich reporting
+
+When performance testing is in scope, the **Deliverables** table should include:
+- Gatling smoke test simulation
+- Gatling load test simulation
+- Stub services deployable to Akka Platform
+- Performance test results at target TPS
+
+### Three Pillars: DevEx, OpsEx, Scalability
+
+Every POC should demonstrate value across three dimensions. The balance varies per customer, but all three should be present:
+
+1. **Developer Experience (DevEx)** — how fast and pleasant it is to build with Akka
+2. **Operational Experience (OpsEx)** — what you get out of the box when running on Akka
+3. **Scalability** — how the architecture handles growing load without redesign
+
+---
+
+## Goal Discovery
+
+Before writing the scope doc, use these questions to identify what matters most to this customer. The answers determine which goals to emphasize and which optional sections to include.
+
+### DevEx Questions
+- Is the customer evaluating Akka against other frameworks (LangChain, Spring, etc.)?
+- Does the customer care about developer onboarding time?
+- Is AI/agent development part of the use case? (If yes, show AI as a first-class component, not a bolt-on)
+- Does the customer value testability? (If yes, emphasize the test kit — no external infra needed)
+
+### OpsEx Questions
+- Is auditability important? (regulatory, compliance, PCI, GDPR) → event sourcing + full audit trail
+- Does the customer need human-in-the-loop? → workflow pause/resume + review UI
+- Is observability a pain point today? → built-in tracing, metrics, logging
+- Does the customer have durability concerns? (lost messages, incomplete processes) → durable execution
+
+### Scalability Questions
+- What is the expected throughput? (TPS, messages/day, concurrent users)
+- Is latency a key concern? (If yes, include a benchmark with specific targets)
+- Is the customer replacing a system that doesn't scale? → include throughput benchmark + legacy comparison
+- Does the customer need multi-region? → include HA/multi-region strategy
+- If AI/Agents are used, is throughput under realistic LLM latency a concern? → include mocked-LLM benchmark showing how Akka's concurrency compensates for model latency
+
+### Scope Sizing Questions
+- Is this a demo (show capability) or a pilot (prove on real data)?
+- How many external systems need to be mocked?
+- Does the customer want a UI? (adds ~1-2 days but greatly improves demo impact)
+- Is there a specific business process to model, or is the use case abstract?
+
+---
+
 ## Required Sections
 
 ### 1. Header
@@ -48,19 +120,34 @@ If the current state is assumed (pre-sales, no deep discovery yet), say so expli
 
 ### 4. Goals
 
-What the POC proves. Number each goal and explain why it matters to this customer specifically. Typically 2-4 goals.
+What the POC proves. Number each goal and explain why it matters to this customer specifically. Typically 2-4 goals. Use the **Goal Discovery** questions above to determine which goals matter most.
 
 Good goals are:
 - Tied to a customer pain point from the Background section
 - Demonstrable in a live walkthrough
 - Measurable (even if qualitatively)
 
-Common goal categories (pick what fits, don't force all):
-- **Functional** — prove the domain model works (e.g., "demonstrate durable replenishment workflow")
-- **DevEx** — show how fast you can build with Akka
-- **OpsEx** — show what you get out of the box (observability, durability, auditability)
-- **Performance** — prove latency/throughput targets
-- **Architecture** — prove a pattern (event sourcing, CQRS, multi-region)
+Every POC should cover all three pillars (DevEx, OpsEx, Scalability), but the emphasis varies. Use the discovery questions to decide weighting:
+
+#### DevEx goal (always include)
+Show how quickly a production-grade solution can be built using the Akka SDK. Highlight:
+- Opinionated component model — entities, workflows, agents compose with minimal boilerplate
+- Built-in test kit — unit and integration tests run locally, no external infrastructure
+- Local development — full service runs on a developer laptop with one command
+- AI-native SDK — agents with tools and session memory are first-class components (if applicable)
+
+#### OpsEx goal (always include)
+Show what you get out of the box when deploying to the Akka platform. Highlight whichever matter most to this customer:
+- Durable execution — workflow state survives restarts, no work is ever lost
+- Observability — built-in tracing, metrics, and logging for every interaction
+- Auditability — full event trail of every state transition (critical for compliance)
+- Human-in-the-loop — workflow pauses for review before proceeding
+
+#### Scalability goal (always include)
+Show Akka's architecture handles load without redesign. Options:
+- **Throughput benchmark** — with mocked dependencies (including mocked LLMs at realistic latency), demonstrate concurrent processing at scale
+- **Latency proof** — show per-step latency breakdown and end-to-end targets
+- **Architecture story** — the same components that power the POC can handle production-grade workloads
 
 ### 5. Scope
 
@@ -82,13 +169,21 @@ Bullet list of things the customer might expect but that are explicitly excluded
 
 #### What's Mocked / Stubbed
 
-Table mapping real systems to their mock implementations:
+Table mapping real systems to their mock implementations. Every external dependency must appear here — the POC must be self-contained.
 
-| Real System | Mock Implementation |
-|-------------|---------------------|
-| Risk Engine | In-memory dataset of sample rules |
-| Salesforce | Sample customer records |
-| ... | ... |
+| Real System | Mock Implementation | Configurable |
+|-------------|---------------------|--------------|
+| Risk Engine | In-memory dataset of sample rules | - |
+| Salesforce | Sample customer records | - |
+| LLM / Model Provider | Fixed responses with realistic latency (~200-500ms) | Response latency, response content |
+| External API | HTTP stub returning mock data | Response latency, failure rate |
+| ... | ... | ... |
+
+**Mocking rules:**
+- Every mock must have **configurable latency** so the POC can demonstrate both fast-path and degraded-path behavior
+- Every mock should support a **configurable failure rate** for resilience demos
+- **LLM/Agent mocks are mandatory** when performance testing is a goal — you cannot benchmark throughput against a real LLM with rate limits and variable latency. Use `TestModelProvider` or a fixed-response stub with realistic latency (~200-500ms per inference) to show how Akka's concurrency model processes requests in parallel despite model latency
+- Mocks should return **realistic data shapes** — not empty responses or "test" strings. The demo is more convincing when the data looks real.
 
 State clearly: *"The POC runs standalone with no external dependencies. All mocks are replaced by configuration change, not code change, when connecting to real systems."*
 
@@ -123,10 +218,18 @@ Numbered table of what ships:
 | # | Deliverable | Description |
 |---|-------------|-------------|
 | 1 | Working Akka service | Complete implementation with all components and mocked data |
-| 2 | Unit tests | Entity and workflow unit tests |
-| 3 | Integration tests | End-to-end lifecycle tests |
-| 4 | README with curl examples | Step-by-step guide to run locally |
-| ... | ... | ... |
+| 2 | Stub services | Deployable mock dependencies with configurable latency and failure rates |
+| 3 | Unit tests | Entity and workflow unit tests |
+| 4 | Integration tests | End-to-end lifecycle tests |
+| 5 | README with curl examples | Step-by-step guide to run locally and interact with the API |
+
+If performance testing is a goal, also include:
+
+| # | Deliverable | Description |
+|---|-------------|-------------|
+| 6 | Gatling smoke test | Simulation verifying deployed service works end-to-end |
+| 7 | Gatling load test | Simulation at target TPS with latency and error rate reporting |
+| 8 | Performance results | Gatling Enterprise report at target throughput |
 
 ### 8. Success Criteria
 
@@ -256,9 +359,10 @@ The POC runs standalone with no external dependencies. All mocks are replaced by
 | # | Deliverable | Description |
 |---|-------------|-------------|
 | 1 | Working Akka service | Complete implementation with all components and mocked data |
-| 2 | Unit tests | Entity and workflow unit tests |
-| 3 | Integration tests | End-to-end lifecycle tests |
-| 4 | README with curl examples | Step-by-step guide to run locally |
+| 2 | Stub services | Deployable mock dependencies with configurable latency and failure rates |
+| 3 | Unit tests | Entity and workflow unit tests |
+| 4 | Integration tests | End-to-end lifecycle tests |
+| 5 | README with curl examples | Step-by-step guide to run locally and interact with the API |
 
 ## 7. Success Criteria
 

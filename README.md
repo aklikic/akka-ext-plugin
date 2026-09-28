@@ -1,6 +1,6 @@
 # akka-ext — Claude Code Plugin
 
-An extension plugin for Akka SDK projects, exposing the `diagrams` and `readme` skills as plugin skills backed by the real SDD workflow.
+An extension plugin for Akka SDK projects, exposing the `diagrams`, `readme`, and `pitch` skills as plugin skills backed by the real SDD workflow.
 
 ## Prerequisites
 
@@ -17,6 +17,9 @@ claude --plugin-dir /path/to/akka-ext
 
 # Generate or update README from SDD artifacts
 /akka-ext:readme
+
+# Generate an HTML pitch page for a feature
+/akka-ext:pitch
 ```
 
 ## Skills
@@ -45,6 +48,18 @@ Generates or updates `README.md` at the repository root from SDD artifacts:
 - **Mode A** (no README): generates from the `readme` template
 - **Mode B** (README exists): performs a change analysis against SDD artifacts, presents a change map, and updates only confirmed sections
 
+### `pitch`
+
+Generates a self-contained HTML pitch page showcasing the Akka SDD workflow for a specific use case. Reads all available SDD artifacts and populates a 5-step visual walkthrough:
+
+1. **Specify** — feature one-liner, representative user story with acceptance scenarios, spec diagrams
+2. **Clarify** — clarification Q&A derived from spec assumptions and decisions
+3. **Plan** — component architecture excerpt, plan diagrams
+4. **Tasks** — representative task samples across phases
+5. **Implement** — syntax-highlighted code snippet, incremental build loop
+
+Saves output to `FEATURE_DIR/pitch.html`. The file is self-contained (dark theme, Mermaid via CDN, sticky timeline nav) and can be opened directly in a browser.
+
 ## Structure
 
 ```
@@ -53,6 +68,9 @@ skills/
 │   ├── SKILL.md                    ← mirrors akka.diagram command
 │   ├── plan-diagrams.template.md    ← technical diagrams template (plan.md mode)
 │   └── spec-diagrams.template.md   ← requirements diagrams template (spec.md mode)
+├── pitch/
+│   ├── SKILL.md               ← generates HTML pitch pages
+│   └── pitch.template.html    ← dark-themed HTML template with placeholders
 └── readme/
     ├── SKILL.md               ← mirrors akka.readme command
     └── readme.template.md     ← akka README template

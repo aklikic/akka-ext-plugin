@@ -1,7 +1,7 @@
 ---
 name: spov
 description: Generate a standardized POC/SPOV Scope of Work document for an Akka engagement. Reads project context (README, existing docs, background info) and produces a scope doc following the team's standard structure. Use when creating or updating a scope of work for a customer engagement.
-allowed-tools: Read, Write, Glob, Grep, mcp__claude_ai_Google_Drive__create_file, mcp__claude_ai_Google_Drive__search_files, mcp__claude_ai_Google_Drive__update_file
+allowed-tools: Read, Write, Glob, Grep, mcp__claude_ai_Google_Drive__create_file, mcp__claude_ai_Google_Drive__search_files, mcp__claude_ai_Google_Drive__update_file, mcp__claude_ai_Google_Drive__read_file_content
 argument-hint: "[customer name and use case, e.g. 'Rossmann warehouse management modernization']"
 ---
 
@@ -24,7 +24,10 @@ You **MUST** consider the user input before proceeding (if not empty).
    - `specs/` or `.akka/specs/` — SDD artifacts if they exist
    - Any Mermaid diagrams or architecture docs
 
-3. **Goal discovery**: If the user has not already specified the goals, ask the Goal Discovery questions from the guide to determine the right emphasis across DevEx, OpsEx, and Scalability. Keep it conversational — don't dump all questions at once. Ask the most important 3-4 based on what you already know from the user input and project context.
+3. **Goal discovery**: If the user has not already specified the goals, ask the Goal Discovery questions from the guide. Keep it conversational — don't dump all questions at once. Ask the most important 3-4 based on what you already know from the user input and project context. Always ask:
+   - Does the customer want a UI/dashboard? (If yes, the UI must be minimalistic — a thin layer that maps 1:1 to the service's HTTP endpoints. No invented features.)
+   - Is the customer evaluating Akka against alternatives? (If yes, include platform comparison notes in each goal)
+   - Does the customer need a phased approach? (Default: Phase 1 on Akka Serverless, Phase 2 via BYOC if needed. Not every engagement needs Phase 2.)
 
 4. **Determine mode**:
 
@@ -36,7 +39,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    Read the existing scope doc. Compare its structure against the guide's required sections. Report what's missing, what's misaligned, and propose updates. Wait for user confirmation before rewriting.
 
 5. **Generate the scope doc**:
-   - Follow the guide's required sections in order (1-10)
+   - Follow the guide's required sections in order (1-11)
    - Include optional sections only when the user input or project context makes them relevant
    - Use Mermaid diagrams following the color conventions in the guide
    - Use the guide's scaffold as the starting structure
@@ -45,38 +48,95 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 6. **Write output**: Save the scope doc to `SCOPE_OF_WORK.md` in the current working directory (or update the existing file).
 
-7. **Offer Google Drive publish**: Ask the user if they want to publish to Google Drive. If yes:
-   - Search Google Drive for an existing file with the same name to avoid duplicates
-   - Create or update the file in Google Drive
-   - Report the file URL
+7. **Offer Google Drive export**: Ask the user if they want to export to Google Drive as a branded document. If yes, use the `gdoc-restyle` pipeline from the presentations repo:
 
-8. **Report**:
-   - Path to generated/updated file
+   a. **Convert scope doc to blocks JSON**: Transform the `SCOPE_OF_WORK.md` content into the block format expected by `build_docx.py`. Each block is one of:
+      - `{"k": "h", "lvl": 1|2|3, "text": "..."}` — heading
+      - `{"k": "p", "runs": [{"t": "...", "b": bool, "i": bool}], "hl": bool}` — paragraph (runs carry bold/italic; `hl` marks highlighted/callout paragraphs)
+      - `{"k": "list", "ordered": bool, "items": [{"runs": [...], "lvl": 0}]}` — list
+      - `{"k": "table", "rows": [{"kind": "head"|"body"|"total", "cells": [{"paras": [[runs]]}]}]}` — table
+
+      A paragraph ending in `:` with `"hl": true` followed by `- ` paragraphs becomes a gold-bar callout box. A paragraph starting with `Note:` becomes a teal-bar callout box.
+
+   b. **Build the styled DOCX**: Run `python3 <presentations-repo>/tools/gdoc-restyle/build_docx.py <blocks.json> <out.docx> --title "<title>" --meta "Akka · <Month Year>"`. This produces a DOCX with:
+      - **Cover page**: Gradient brand bar (#FFCE4A → #04C4C5 → #D70023), teal Roboto Mono eyebrow (customer name), 42pt gold Instrument Sans title, meta line
+      - **Named styles**: Normal = 10.5pt Instrument Sans; H1 = 19pt Instrument Sans Medium with grey rule below; H2 = 13.5pt bold
+      - **Tables**: Grey header row with gold rule below, hairline row separators, no vertical borders, right-aligned numeric columns
+      - **Callouts**: Grey box with gold or teal left bar
+      - **Footer**: Title on left, page n/N on right in 7pt Roboto Mono
+      - Output: `<out.docx>` and `<out.docx>.b64` (base64 for upload)
+
+   c. **Upload to Google Drive**: Use `mcp__claude_ai_Google_Drive__create_file` with:
+      - `title`: The scope doc title (e.g., "Customer — Intelligent Order Routing")
+      - `base64Content`: Contents of `<out.docx>.b64`
+      - `contentMimeType`: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+      - Google Drive auto-converts the DOCX to a Google Doc with all formatting preserved
+
+      **Note**: If the base64 upload fails (connector size limits or conversion errors), save the DOCX locally and inform the user to upload it manually to Google Drive — the conversion preserves all formatting.
+
+   d. **Report the Google Drive URL** (or local DOCX path) to the user.
+
+8. **Offer kickoff presentation export**: Ask the user if they want a presentation version for the kickoff meeting. If yes, generate a self-contained HTML slide deck:
+
+   a. **Structure**: 3 slides condensing the scope doc:
+      - **Slide 1: Proposed Solution** — eyebrow label, title, Mermaid solution overview diagram (from Section 3), key design decision bullets
+      - **Slide 2: Goals** — goals as card grid (2 columns), each card has: tag (G1, G2...), title, key bullets, open questions in yellow mono
+      - **Slide 3: Phased Approach** — phase cards side by side (Phase 1 active with yellow border, Phase 2 future with muted styling), each with description and goal bullets
+
+   b. **Design system** (from TylerJewell/presentations):
+      - Dark theme: `--black: #000`, `--dark: #07070C`, `--card: #131316`, `--line: #222`
+      - Text: `--white: #fff`, `--muted: #9a9a9a`, `--dim: #6c6c6c`
+      - Accent: `--yellow: #F5C518`
+      - Component colors: `--blue: #1a73e8`, `--purple: #7c4dff`, `--orange: #ff8f00`, `--green: #28C840`, `--red: #E74C3C`
+      - Fonts: Instrument Sans (body/headings), JetBrains Mono (labels/eyebrows/tags)
+      - Slides: full viewport height, vertically centered, scroll-snap
+      - Eyebrow: mono 11px uppercase with yellow dash prefix
+      - Cards: `--card` background, `--line` border, 12px radius
+      - Phase card active: yellow border; future: muted styling
+      - Mermaid: dark theme with matching color variables
+      - Slide counter: fixed bottom-right, mono 11px
+
+   c. **Content rules**:
+      - Extract directly from the scope doc — do not invent content
+      - Goals should show concise bullets (bold key point + muted detail), not full paragraphs
+      - Open questions from the scope doc appear as yellow mono text at bottom of relevant goal cards
+      - Mermaid diagrams use the same diagram from the scope doc's Proposed Solution section
+
+   d. **Write output**: Save to `presentation.html` in the current working directory.
+
+9. **Report**:
+   - Path to generated/updated scope doc
    - Which required sections are complete vs. need customer input
    - Which optional sections were included and why
-   - Google Drive URL if published
+   - Google Drive URL or local DOCX path if exported
+   - Path to presentation.html if generated
 
-## Key Rules
+## Recommendations
 
-### Self-Containment
-- The POC MUST run standalone — `mvn compile exec:java` and nothing else. No Docker compose, no external databases, no API keys for the basic demo
-- ALWAYS include the Mocked/Stubbed table — every external dependency must appear, including LLM providers
-- Every mock MUST have configurable latency and failure rate
-- If the POC uses Agents, the Mocked/Stubbed table MUST include an LLM mock entry with realistic latency (~200-500ms)
-- If performance/throughput is a goal and LLMs are involved, the scope MUST include a benchmark using mocked LLMs — you cannot benchmark against real LLMs with rate limits
+The following are recommendations, not strict rules. After generating the scope doc, present these as a checklist for the user to review and approve before finalizing. The user has final say on all of these.
 
-### Goals
-- Every scope doc MUST address all three pillars: DevEx, OpsEx, Scalability — the emphasis varies but none should be absent
-- Use the Goal Discovery questions to determine weighting — don't guess, ask the user
-- Goals must be tied to customer pain points, not generic Akka feature lists
+### Self-Containment (recommend)
+- POC should run standalone — `mvn compile exec:java` and nothing else. No Docker compose, no external databases, no API keys for the basic demo
+- Include a Mocked/Stubbed table — every external dependency should appear, including LLM providers
+- Mocks should have configurable latency and failure rate
+- If the POC uses Agents, recommend including an LLM mock entry with realistic latency (~200-500ms)
+- If performance/throughput is a goal and LLMs are involved, recommend a benchmark using mocked LLMs
 
-### Structure & Content
-- ALWAYS follow the section order and naming from the guide — consistency across all scope docs is the point
-- NEVER invent customer details, pain points, or technical specifics — ask the user if context is missing
-- NEVER include a Timeline section — this is explicitly excluded from the standard
-- Diagrams MUST use the color conventions from the guide (blue=Akka transactional, purple=Akka AI, orange=external, green=human, teal=UI)
-- Number flow lines in all architecture diagrams to show sequence
-- Success Criteria must be observable and measurable — reject vague criteria like "system performs well"
-- The "After the POC" section must be customer-specific — not generic Akka marketing
+### Goals (recommend)
+- Goals should emerge from the Goal Discovery conversation and the customer's specific pain points — don't force goals into predefined pillars
+- DevEx, OpsEx, and Scalability are common themes (see the guide) but are guidelines, not mandatory sections — include what's relevant, omit what isn't
+- Use the Goal Discovery questions to understand what matters — don't guess, ask the user
+- Goals should be tied to customer pain points, not generic Akka feature lists
+
+### Structure & Content (recommend)
+- Follow the section order and naming from the guide — consistency across scope docs is the goal
+- Don't invent customer details, pain points, or technical specifics — ask the user if context is missing
+- Avoid including timelines or time estimates — no delivery dates, durations, or time commitments
+- Diagrams should use the color conventions from the guide (blue=Akka transactional, purple=Akka AI, orange=external, green=human, teal=UI)
+- Number flow lines in architecture diagrams to show sequence
+- Success Criteria should be observable and measurable — flag vague criteria like "system performs well" for user review
+- The "Phased Approach" section should be customer-specific — Phase 2 should cover their actual integration path, not generic Akka marketing
 - If updating an existing doc (Mode B), preserve content that already follows the guide and only restructure/add what's missing
-- Use absolute paths when reading files
+
+### Human Gate
+After generating the scope doc, present a summary of recommendations applied and any deviations from the guide. Wait for user confirmation before considering the doc final. Use absolute paths when reading files.

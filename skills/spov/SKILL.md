@@ -39,7 +39,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    Read the existing scope doc. Compare its structure against the guide's required sections. Report what's missing, what's misaligned, and propose updates. Wait for user confirmation before rewriting.
 
 5. **Generate the scope doc**:
-   - Follow the guide's required sections in order (1-11)
+   - Follow the guide's required sections in order (1-12, where 1=Header, 2=TOC, 3=Executive Summary through 12=Assumptions)
    - Include optional sections only when the user input or project context makes them relevant
    - Use Mermaid diagrams following the color conventions in the guide
    - Use the guide's scaffold as the starting structure
@@ -78,10 +78,11 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 8. **Offer kickoff presentation export**: Ask the user if they want a presentation version for the kickoff meeting. If yes, generate a self-contained HTML slide deck:
 
-   a. **Structure**: 3 slides condensing the scope doc:
-      - **Slide 1: Proposed Solution** — eyebrow label, title, Mermaid solution overview diagram (from Section 3), key design decision bullets
-      - **Slide 2: Goals** — goals as card grid (2 columns), each card has: tag (G1, G2...), title, key bullets, open questions in yellow mono
-      - **Slide 3: Phased Approach** — phase cards side by side (Phase 1 active with yellow border, Phase 2 future with muted styling), each with description and goal bullets
+   a. **Structure**: 4 slides condensing the scope doc:
+      - **Slide 1: Assumptions & Open Questions** — key assumptions as numbered list, open questions in yellow mono. This is the starting point for the kickoff conversation — validate before proceeding.
+      - **Slide 2: Proposed Solution** — eyebrow label, title, Mermaid solution overview diagram (from Section 3), key design decision bullets
+      - **Slide 3: Goals** — goals as card grid (2 columns), each card has: tag (G1, G2...), title, key bullets, open questions in yellow mono
+      - **Slide 4: Phased Approach** — phase cards side by side (Phase 1 active with yellow border, Phase 2 future with muted styling), each with description and goal bullets
 
    b. **Design system** (from TylerJewell/presentations):
       - Dark theme: `--black: #000`, `--dark: #07070C`, `--card: #131316`, `--line: #222`

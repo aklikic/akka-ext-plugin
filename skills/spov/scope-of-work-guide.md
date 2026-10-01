@@ -109,13 +109,17 @@ Before writing the scope doc, use these questions to identify what matters most 
 | **Prepared for** | Customer name, key contacts |
 | **Prepared by** | Akka / Lightbend |
 
-### 2. Executive Summary
+### 2. Table of Contents
+
+Auto-generated list of all sections. Place after the header, before the Executive Summary.
+
+### 3. Executive Summary
 
 3-5 sentences. What we're building, why it matters to this customer, and what the expected outcome is. A busy executive should be able to read only this and understand the proposal.
 
 Do NOT list Akka features here. Focus on the customer's problem and the outcome.
 
-### 3. Background
+### 4. Background
 
 Set the context: what the customer does, what system or process this targets, and why now. Include:
 
@@ -126,7 +130,7 @@ Use a Mermaid diagram if the current state or pain points benefit from visualiza
 
 If the current state is assumed (pre-sales, no deep discovery yet), say so explicitly: *"Assumed based on initial conversations — to be validated."*
 
-### 4. Proposed Solution
+### 5. Proposed Solution
 
 Bridge between the problem (Background) and the proof points (Goals). This section answers "what are we actually building?" before diving into goals and scope details. Include:
 
@@ -146,7 +150,7 @@ Table with columns: **Step**, **What happens**, **Rules or AI?** (or similar dis
 
 Table with columns: **Decision**, **Rationale**. Document the key choices made in the solution design and why. Examples: "Rules for matching, AI for exceptions", "Synthetic data, self-contained", "Human-in-the-loop for exceptions". This builds confidence that decisions are deliberate, not arbitrary.
 
-### 5. Goals
+### 6. Goals
 
 What the POC proves. Number each goal and explain why it matters to this customer specifically. Typically 2-4 goals. Use the **Goal Discovery** questions above to determine which goals matter most.
 
@@ -173,7 +177,7 @@ The following are **common themes** that Akka POCs often demonstrate — use the
 - **Quality of Output** — built-in evaluation and regression testing for AI outputs
 - **AI Governance** — runtime-enforced guardrails, audit trail, human-in-the-loop
 
-### 6. Scope
+### 7. Scope
 
 Three subsections:
 
@@ -211,7 +215,7 @@ Table mapping real systems to their mock implementations. Every external depende
 
 State clearly: *"The POC runs standalone with no external dependencies. All mocks are replaced by configuration change, not code change, when connecting to real systems."*
 
-### 7. Architecture
+### 8. Architecture
 
 At minimum, include:
 
@@ -235,7 +239,7 @@ Optional (include when they add value):
 - Number flow lines to show sequence
 - Include a legend below each diagram
 
-### 8. Deliverables
+### 9. Deliverables
 
 Numbered table of what ships:
 
@@ -255,7 +259,7 @@ If performance testing is a goal, also include:
 | 7 | Gatling load test | Simulation at target TPS with latency and error rate reporting |
 | 8 | Performance results | Gatling Enterprise report at target throughput |
 
-### 9. Success Criteria
+### 10. Success Criteria
 
 Table with three columns — tie each criterion back to a goal:
 
@@ -267,7 +271,7 @@ Table with three columns — tie each criterion back to a goal:
 
 Criteria must be **observable** — something you can demonstrate in a live session or measure in a test run. Avoid vague criteria like "system performs well."
 
-### 10. Phased Approach
+### 11. Phased Approach
 
 Use the **Deployment & Phasing Questions** from Goal Discovery to determine whether a phased approach is needed. The default model:
 
@@ -299,7 +303,7 @@ When Phase 2 is included, it typically covers:
 
 This section is strategic — it shows the customer that the POC is a starting point with a clear path to production.
 
-### 11. Assumptions & Open Questions
+### 12. Assumptions & Open Questions
 
 Two parts:
 
@@ -339,6 +343,19 @@ Include these when they add value for the specific engagement:
 
 ---
 
+## Table of Contents
+
+1. Executive Summary
+2. Background
+3. Proposed Solution
+4. Goals
+5. Scope
+6. Architecture
+7. Deliverables
+8. Success Criteria
+9. Phased Approach
+10. Assumptions & Open Questions
+
 ## 1. Executive Summary
 
 {3-5 sentences: what we're building, why it matters, expected outcome}
@@ -354,6 +371,7 @@ Include these when they add value for the specific engagement:
 {Specific problems this POC addresses}
 
 ## 3. Proposed Solution
+
 
 ### What We're Building
 

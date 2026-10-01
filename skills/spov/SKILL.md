@@ -50,31 +50,21 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 7. **Offer Google Drive export**: Ask the user if they want to export to Google Drive as a branded document. If yes, use the `gdoc-restyle` pipeline from the presentations repo:
 
-   a. **Convert scope doc to blocks JSON**: Transform the `SCOPE_OF_WORK.md` content into the block format expected by `build_docx.py`. Each block is one of:
-      - `{"k": "h", "lvl": 1|2|3, "text": "..."}` — heading
-      - `{"k": "p", "runs": [{"t": "...", "b": bool, "i": bool}], "hl": bool}` — paragraph (runs carry bold/italic; `hl` marks highlighted/callout paragraphs)
-      - `{"k": "list", "ordered": bool, "items": [{"runs": [...], "lvl": 0}]}` — list
-      - `{"k": "table", "rows": [{"kind": "head"|"body"|"total", "cells": [{"paras": [[runs]]}]}]}` — table
+   a. **Convert markdown to blocks + render diagrams**: Run:
+      ```
+      python3 skills/spov/md_to_blocks.py <SCOPE_OF_WORK.md> <blocks.json> --img-dir <diagrams-dir>
+      ```
+      This parses the markdown into blocks, extracts Mermaid code blocks, and renders them to PNG via `mmdc`. Outputs `blocks.json` + diagram PNGs.
 
-      A paragraph ending in `:` with `"hl": true` followed by `- ` paragraphs becomes a gold-bar callout box. A paragraph starting with `Note:` becomes a teal-bar callout box.
+   b. **Build styled DOCX**: Run:
+      ```
+      python3 skills/spov/build_spov_docx.py <blocks.json> <out.docx> --title "<Customer — Description>" --meta "Akka · <Month Year>"
+      ```
+      This produces a DOCX with cover page (brand bar, teal eyebrow, gold title), styled headings, tables with gold-rule headers, embedded Mermaid diagrams, callout boxes, and page footer. Outputs `<out.docx>` and `<out.docx>.b64`.
 
-   b. **Build the styled DOCX**: Run `python3 <presentations-repo>/tools/gdoc-restyle/build_docx.py <blocks.json> <out.docx> --title "<title>" --meta "Akka · <Month Year>"`. This produces a DOCX with:
-      - **Cover page**: Gradient brand bar (#FFCE4A → #04C4C5 → #D70023), teal Roboto Mono eyebrow (customer name), 42pt gold Instrument Sans title, meta line
-      - **Named styles**: Normal = 10.5pt Instrument Sans; H1 = 19pt Instrument Sans Medium with grey rule below; H2 = 13.5pt bold
-      - **Tables**: Grey header row with gold rule below, hairline row separators, no vertical borders, right-aligned numeric columns
-      - **Callouts**: Grey box with gold or teal left bar
-      - **Footer**: Title on left, page n/N on right in 7pt Roboto Mono
-      - Output: `<out.docx>` and `<out.docx>.b64` (base64 for upload)
+   c. **Upload or deliver**: Check the size of `<out.docx>.b64`. If under 23,000 characters, upload via MCP `mcp__claude_ai_Google_Drive__create_file` with `base64Content` from the `.b64` file and `contentMimeType: application/vnd.openxmlformats-officedocument.wordprocessingml.document` — Google Drive auto-converts to a Google Doc with formatting preserved. If over 23,000 characters (typical when Mermaid diagrams are embedded), save the DOCX locally and instruct the user: *"Upload the DOCX to Google Drive (drag & drop or New → File upload). Google Drive will auto-convert it to a Google Doc with all formatting, fonts, tables, diagrams, and cover page preserved."*
 
-   c. **Upload to Google Drive**: Use `mcp__claude_ai_Google_Drive__create_file` with:
-      - `title`: The scope doc title (e.g., "Customer — Intelligent Order Routing")
-      - `base64Content`: Contents of `<out.docx>.b64`
-      - `contentMimeType`: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
-      - Google Drive auto-converts the DOCX to a Google Doc with all formatting preserved
-
-      **Note**: If the base64 upload fails (connector size limits or conversion errors), save the DOCX locally and inform the user to upload it manually to Google Drive — the conversion preserves all formatting.
-
-   d. **Report the Google Drive URL** (or local DOCX path) to the user.
+   d. **Report the DOCX path** (and Google Drive URL if uploaded) to the user.
 
 8. **Offer kickoff presentation export**: Ask the user if they want a presentation version for the kickoff meeting. If yes, generate a self-contained HTML slide deck:
 
@@ -117,7 +107,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 The following are recommendations, not strict rules. After generating the scope doc, present these as a checklist for the user to review and approve before finalizing. The user has final say on all of these.
 
 ### Self-Containment (recommend)
-- POC should run standalone — `mvn compile exec:java` and nothing else. No Docker compose, no external databases, no API keys for the basic demo
+- POC should run standalone with a single command. No Docker compose, no external databases, no API keys for the basic demo
 - Include a Mocked/Stubbed table — every external dependency should appear, including LLM providers
 - Mocks should have configurable latency and failure rate
 - If the POC uses Agents, recommend including an LLM mock entry with realistic latency (~200-500ms)

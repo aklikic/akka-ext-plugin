@@ -21,40 +21,32 @@ Professional but direct. Lead with value, not technology. Use tables over prose 
 
 ### Self-Contained POC
 
-Every POC must run standalone on a developer laptop with zero external dependencies. This is non-negotiable — it ensures the demo works reliably in any environment, removes setup friction, and lets the customer focus on what Akka does rather than debugging connectivity.
+Every POC should run standalone on a developer laptop with zero external dependencies. This ensures the demo works reliably in any environment, removes setup friction, and lets the customer focus on what Akka does rather than debugging connectivity.
 
 What this means in practice:
 - **All external systems are mocked** — databases, APIs, message brokers, third-party services. Mocks return realistic data with configurable latency and failure rates.
 - **All AI/LLM dependencies are mockable** — if the POC uses Agents, provide a mock model mode that returns fixed responses with realistic latency (~200-500ms). This is critical for performance testing — you cannot benchmark throughput against a real LLM with rate limits and variable latency.
-- **Single command to run** — `mvn compile exec:java` starts everything. No Docker compose, no external databases, no API keys required for the basic demo flow.
-- **Mocks are replaceable by configuration** — swapping a mock for a real service is a URL change in config, not a code change. This makes the "After the POC" path credible.
+- **Single command to run** — one command starts everything. No Docker compose, no external databases, no API keys required for the basic demo flow.
+- **Mocks are replaceable by configuration** — swapping a mock for a real service is a URL change in config, not a code change. This makes the Phase 2 path credible.
 
 ### Performance Testing with Gatling Enterprise
 
 When scalability/throughput is a goal, the POC includes performance testing using **Gatling Enterprise**:
 
-- **Gatling simulations** are a separate Maven module (e.g., `performance-tests/`) — not part of the Akka service itself
+- **Gatling simulations** are a separate module (e.g., `performance-tests/`) — not part of the Akka service itself
 - **Two simulation types**:
   - **Smoke test** — small number of requests to verify the deployed service works end-to-end
   - **Load test** — sustained TPS at target throughput, measuring latency percentiles and error rates
-- **Test against deployed service** — the Akka service and its stub dependencies are deployed to the **Akka Platform**. Gatling runs against the deployed service URL, not localhost. This proves real infrastructure behavior, not just local performance.
+- **Test against deployed service** — the Akka service and its stub dependencies are deployed to **Akka Serverless**. Gatling runs against the deployed service URL, not localhost. This proves real infrastructure behavior, not just local performance.
 - **Stub services deploy alongside** — mock/stub external dependencies are packaged as a separate Akka service and deployed to the platform. This gives realistic network latency between the main service and its dependencies.
 - **Configurable parameters** — simulations accept system properties for `BASE_URL`, `RATE_PER_SEC`, `DURATION`, `RAMP_UP`, and any domain-specific parameters (e.g., `ACCOUNT_POOL_SIZE` for cache hit ratio tuning)
-- **Gatling Enterprise packaging** — simulations are packaged as a fat JAR (`mvn gatling:enterprisePackage`) for upload to Gatling Enterprise, enabling distributed load generation and rich reporting
+- **Gatling Enterprise packaging** — simulations are packaged as a fat JAR for upload to Gatling Enterprise, enabling distributed load generation and rich reporting
 
 When performance testing is in scope, the **Deliverables** table should include:
 - Gatling smoke test simulation
 - Gatling load test simulation
-- Stub services deployable to Akka Platform
+- Stub services deployable to Akka Serverless
 - Performance test results at target TPS
-
-### Common Value Themes
-
-Akka POCs typically demonstrate value across these dimensions. Not all need to be present — prioritize based on what the customer cares about:
-
-1. **Developer Experience (DevEx)** — how fast and pleasant it is to build with Akka
-2. **Operational Experience (OpsEx)** — what you get out of the box when running on Akka
-3. **Scalability** — how the architecture handles growing load without redesign
 
 ---
 
@@ -207,23 +199,15 @@ Table mapping real systems to their mock implementations. Every external depende
 | External API | HTTP stub returning mock data | Response latency, failure rate |
 | ... | ... | ... |
 
-**Mocking rules:**
-- Every mock must have **configurable latency** so the POC can demonstrate both fast-path and degraded-path behavior
-- Every mock should support a **configurable failure rate** for resilience demos
-- **LLM/Agent mocks are mandatory** when performance testing is a goal — you cannot benchmark throughput against a real LLM with rate limits and variable latency. Use `TestModelProvider` or a fixed-response stub with realistic latency (~200-500ms per inference) to show how Akka's concurrency model processes requests in parallel despite model latency
-- Mocks should return **realistic data shapes** — not empty responses or "test" strings. The demo is more convincing when the data looks real.
+See Core Principles above for mocking guidelines (configurable latency/failure, realistic data, LLM mocks for performance testing).
 
 State clearly: *"The POC runs standalone with no external dependencies. All mocks are replaced by configuration change, not code change, when connecting to real systems."*
 
 ### 8. Architecture
 
-At minimum, include:
-
-1. **High-level system diagram** — shows the Akka service, external systems, and human actors with numbered flow lines
-2. **Core business flow** — sequence diagram or state diagram showing the main happy path
+At minimum, include the **Akka Implementation Diagram** — shows how the Proposed Solution maps to Akka components (entities, workflows, agents, views, endpoints, etc.), with external systems and human actors. The business-level flow is already in the Proposed Solution section; this diagram shows the technical implementation.
 
 Optional (include when they add value):
-- Akka components breakdown diagram
 - Data flow / event sourcing diagram
 - Benchmark architecture diagram
 
@@ -231,8 +215,8 @@ Optional (include when they add value):
 
 - Use Mermaid for all diagrams
 - Color Akka components distinctly from external systems:
-  - **Blue** (`#1a73e8`) — Akka transactional components (Entity, Workflow, View, Endpoint)
-  - **Purple** (`#7c4dff`) — Akka AI components (Agent)
+  - **Blue** (`#1a73e8`) — Akka transactional components (Entity, Workflow, View, Endpoint, Consumer, Timed Action)
+  - **Purple** (`#7c4dff`) — Akka AI components (Agent, Evaluator, Guardrail)
   - **Orange** (`#ff8f00`) — External systems (mocked or real)
   - **Green** (`#2e7d32`) — Human actors
   - **Teal** (`#00897b`) — Web UI
@@ -249,7 +233,7 @@ Numbered table of what ships:
 | 2 | Stub services | Deployable mock dependencies with configurable latency and failure rates |
 | 3 | Unit tests | Entity and workflow unit tests |
 | 4 | Integration tests | End-to-end lifecycle tests |
-| 5 | README with curl examples | Step-by-step guide to run locally and interact with the API |
+| 5 | README with examples | Step-by-step guide to run locally and interact with the API |
 
 If performance testing is a goal, also include:
 
@@ -325,7 +309,7 @@ Include these when they add value for the specific engagement:
 | **Multi-Region / HA Strategy** | Enterprise modernization where HA is a requirement |
 | **DevEx / OpsEx Comparison** | Replacing a legacy system — show legacy vs Akka side-by-side |
 | **Throughput Benchmark** | Performance is a primary proof point |
-| **Phased Delivery** | POC has distinct internal phases (e.g., Phase 1: static workflow, Phase 2: caching, Phase 3: AI agent) |
+| **Internal Milestones** | POC has distinct internal build phases (e.g., milestone 1: core workflow, milestone 2: AI agent, milestone 3: dashboard) |
 
 ---
 
@@ -371,7 +355,6 @@ Include these when they add value for the specific engagement:
 {Specific problems this POC addresses}
 
 ## 3. Proposed Solution
-
 
 ### What We're Building
 

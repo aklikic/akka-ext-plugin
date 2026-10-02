@@ -49,7 +49,16 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 6. **Write output**: Save the scope doc to `SCOPE_OF_WORK.md` in the current working directory (or update the existing file).
 
-7. **Offer Google Drive export**: Ask the user if they want to export to Google Drive as a branded document. If yes, use the `gdoc-restyle` pipeline from the presentations repo:
+7. **Offer Google Drive export**: Ask the user if they want to export to Google Drive as a branded document. If yes:
+
+   **Prerequisites check** — before running the pipeline, verify all required tools are available:
+   ```
+   python3 -c "from docx import Document; from PIL import Image; print('python-docx and Pillow: OK')"
+   npx --yes @mermaid-js/mermaid-cli --version
+   ```
+   If `python-docx` or `Pillow` are missing, install: `pip3 install --break-system-packages python-docx Pillow`
+   If `npx` is not available, Node.js must be installed first.
+   Do not proceed with the export until all prerequisites pass.
 
    a. **Convert markdown to blocks + render diagrams**: Always use `md_to_blocks.py` — do NOT manually construct blocks JSON:
       ```

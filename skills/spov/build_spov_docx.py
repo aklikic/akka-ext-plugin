@@ -18,10 +18,81 @@ GDOC_RESTYLE = os.path.expanduser('~/akka/repos/presentations/tools/gdoc-restyle
 sys.path.insert(0, GDOC_RESTYLE)
 
 import build_docx as gd
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.shared import Emu
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
+
+def restart_numbering(doc, paragraph):
+    """Force an ordered list paragraph to restart numbering at 1.
+
+    The List Number style defines numbering at the style level, so paragraphs
+    don't have per-paragraph numPr. We need to:
+    1. Find the numId from the style
+    2. Create a new numbering instance with a restart override
+    3. Add explicit numPr to this paragraph pointing to the new instance
+    """
+    # Get the numId from the List Number style
+    style_el = doc.styles['List Number'].element
+    style_pPr = style_el.find(qn('w:pPr'))
+    if style_pPr is None:
+        return
+    style_numPr = style_pPr.find(qn('w:numPr'))
+    if style_numPr is None:
+        return
+    style_numId_el = style_numPr.find(qn('w:numId'))
+    if style_numId_el is None:
+        return
+    style_num_id = style_numId_el.get(qn('w:val'))
+
+    # Access numbering part
+    numbering_part = doc.part.numbering_part
+    ct_numbering = numbering_part._element
+
+    # Find the abstractNumId for the style's numId
+    abstract_id = None
+    for num_el in ct_numbering.findall(qn('w:num')):
+        if num_el.get(qn('w:numId')) == style_num_id:
+            abstract_ref = num_el.find(qn('w:abstractNumId'))
+            abstract_id = abstract_ref.get(qn('w:val'))
+            break
+    if abstract_id is None:
+        return
+
+    # Find highest existing numId
+    existing = ct_numbering.findall(qn('w:num'))
+    max_id = max((int(n.get(qn('w:numId'))) for n in existing), default=0)
+    new_id = max_id + 1
+
+    # Create new num with restart override
+    new_num = OxmlElement('w:num')
+    new_num.set(qn('w:numId'), str(new_id))
+    new_abstract = OxmlElement('w:abstractNumId')
+    new_abstract.set(qn('w:val'), abstract_id)
+    new_num.append(new_abstract)
+
+    lvl_override = OxmlElement('w:lvlOverride')
+    lvl_override.set(qn('w:ilvl'), '0')
+    start_override = OxmlElement('w:startOverride')
+    start_override.set(qn('w:val'), '1')
+    lvl_override.append(start_override)
+    new_num.append(lvl_override)
+
+    ct_numbering.append(new_num)
+
+    # Add explicit numPr to this paragraph pointing to the new instance
+    pPr = paragraph._p.get_or_add_pPr()
+    numPr = OxmlElement('w:numPr')
+    ilvl = OxmlElement('w:ilvl')
+    ilvl.set(qn('w:val'), '0')
+    numId = OxmlElement('w:numId')
+    numId.set(qn('w:val'), str(new_id))
+    numPr.append(ilvl)
+    numPr.append(numId)
+    pPr.insert(0, numPr)
 
 
 def body_with_images(doc, blocks):
@@ -78,8 +149,12 @@ def body_with_images(doc, blocks):
                 i += 1
         elif b['k'] == 'list':
             style = 'List Number' if b['ordered'] else 'List Bullet'
-            for it in b['items']:
-                gd.add_runs(doc.add_paragraph(style=style), it['runs'])
+            for j, it in enumerate(b['items']):
+                p = doc.add_paragraph(style=style)
+                gd.add_runs(p, it['runs'])
+                # Restart numbering at 1 for each ordered list block
+                if b['ordered'] and j == 0:
+                    restart_numbering(doc, p)
             doc.paragraphs[-1].paragraph_format.space_after = gd.Pt(8)
             i += 1
         elif b['k'] == 'table':

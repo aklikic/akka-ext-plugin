@@ -51,17 +51,17 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 7. **Offer Google Drive export**: Ask the user if they want to export to Google Drive as a branded document. If yes, use the `gdoc-restyle` pipeline from the presentations repo:
 
-   a. **Convert markdown to blocks + render diagrams**: Run:
+   a. **Convert markdown to blocks + render diagrams**: Always use `md_to_blocks.py` — do NOT manually construct blocks JSON:
       ```
-      python3 skills/spov/md_to_blocks.py <SCOPE_OF_WORK.md> <blocks.json> --img-dir <diagrams-dir>
+      python3 skills/spov/md_to_blocks.py SCOPE_OF_WORK.md scope_blocks.json --img-dir diagrams/
       ```
-      This parses the markdown into blocks, extracts Mermaid code blocks, and renders them to PNG via `mmdc`. Outputs `blocks.json` + diagram PNGs.
+      This parses the markdown into blocks, extracts Mermaid code blocks, renders them to PNG via `mmdc`, and outputs `scope_blocks.json` + `diagrams/*.png`. Image blocks use the format `{"k": "image", "path": "...", "alt": "..."}`.
 
-   b. **Build styled DOCX**: Run:
+   b. **Build styled DOCX**: Use `build_spov_docx.py` from this skill directory (NOT `build_docx.py` from the presentations repo — the presentations version does not support image blocks):
       ```
-      python3 skills/spov/build_spov_docx.py <blocks.json> <out.docx> --title "<Customer — Description>" --meta "Akka · <Month Year>"
+      python3 skills/spov/build_spov_docx.py scope_blocks.json "<Customer — Description>.docx" --title "<Customer — Description>" --meta "Akka · <Month Year>"
       ```
-      This produces a DOCX with cover page (brand bar, teal eyebrow, gold title), styled headings, tables with gold-rule headers, embedded Mermaid diagrams, callout boxes, and page footer. Outputs `<out.docx>` and `<out.docx>.b64`.
+      This produces a DOCX with cover page (brand bar, teal eyebrow, gold title), styled headings, tables with gold-rule headers, embedded Mermaid diagram images, callout boxes, and page footer. Outputs `.docx` and `.docx.b64`.
 
    c. **Upload or deliver**: Check the size of `<out.docx>.b64`. If under 23,000 characters, upload via MCP `mcp__claude_ai_Google_Drive__create_file` with `base64Content` from the `.b64` file and `contentMimeType: application/vnd.openxmlformats-officedocument.wordprocessingml.document` — Google Drive auto-converts to a Google Doc with formatting preserved. Use the title format `{Customer} — {One-line description}` (e.g., `Paysafe — Consumer Risk Audit Response Agent`).
 

@@ -27,7 +27,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 3. **Goal discovery**: If the user has not already specified the goals, ask the Goal Discovery questions from the guide. Keep it conversational — don't dump all questions at once. Ask the most important 3-4 based on what you already know from the user input and project context. Always ask:
    - Does the customer want a UI/dashboard? (If yes, the UI must be minimalistic — a thin layer that maps 1:1 to the service's HTTP endpoints. No invented features.)
    - Is the customer evaluating Akka against alternatives? (If yes, include platform comparison notes in each goal)
-   - Does the customer need a phased approach? (Default: Phase 1 on Akka Serverless, Phase 2 via BYOC if needed. Not every engagement needs Phase 2.)
+   - Does the customer have infosec/compliance requirements that affect where the POC runs?
 
 4. **Determine mode**:
 
@@ -39,7 +39,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    Read the existing scope doc. Compare its structure against the guide's required sections. Report what's missing, what's misaligned, and propose updates. Wait for user confirmation before rewriting.
 
 5. **Generate the scope doc**:
-   - Follow the guide's required sections in order (1-12, where 1=Header, 2=TOC, 3=Executive Summary through 12=Assumptions)
+   - Follow the guide's required sections in order (1-13)
+   - Start in DRAFT stage — set header status to DRAFT
    - Include optional sections only when the user input or project context makes them relevant
    - Use Mermaid diagrams following the color conventions in the guide
    - Use the guide's scaffold as the starting structure
@@ -71,8 +72,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    a. **Structure**: 4 slides condensing the scope doc:
       - **Slide 1: Assumptions & Open Questions** — key assumptions as numbered list, open questions in yellow mono. This is the starting point for the kickoff conversation — validate before proceeding.
       - **Slide 2: Proposed Solution** — eyebrow label, title, Mermaid solution overview diagram (from Section 3), key design decision bullets
-      - **Slide 3: Goals** — goals as card grid (2 columns), each card has: tag (G1, G2...), title, key bullets, open questions in yellow mono
-      - **Slide 4: Phased Approach** — phase cards side by side (Phase 1 active with yellow border, Phase 2 future with muted styling), each with description and goal bullets
+      - **Slide 3: Goals & Expected Benefits** — goals as card grid (2 columns), each card has: tag (G1, G2...), title, key bullets. Expected benefits table below.
+      - **Slide 4: Next Steps & Timeline** — timeline milestones table, next steps (deploy BYOC + connect real systems)
 
    b. **Design system** (from TylerJewell/presentations):
       - Dark theme: `--black: #000`, `--dark: #07070C`, `--card: #131316`, `--line: #222`
@@ -119,14 +120,22 @@ The following are recommendations, not strict rules. After generating the scope 
 - Use the Goal Discovery questions to understand what matters — don't guess, ask the user
 - Goals should be tied to customer pain points, not generic Akka feature lists
 
+### Expected Benefits (recommend)
+- Expected Benefits maps pain points to what **Akka as a platform** delivers — NOT what the use case solves
+- The customer already knows the value of their use case; show them what the platform brings
+- Do not repeat pain points in the Background section — they belong here
+
 ### Structure & Content (recommend)
 - Follow the section order and naming from the guide — consistency across scope docs is the goal
 - Don't invent customer details, pain points, or technical specifics — ask the user if context is missing
-- Avoid including timelines or time estimates — no delivery dates, durations, or time commitments
+- Background covers Current State only — no Pain Points subsection
+- Timeline section uses TBD milestones in DRAFT/PROPOSAL — no duration estimates until scope is agreed
+- Next Steps should be simple (deploy BYOC + connect real systems) — don't add sales items
+- Never name specific competitors — use "alternative frameworks" or "alternative approaches"
+- No CLI commands in customer-facing text — use outcome-oriented language
 - Diagrams should use the color conventions from the guide (blue=Akka transactional, purple=Akka AI, orange=external, green=human, teal=UI)
 - Number flow lines in architecture diagrams to show sequence
 - Success Criteria should be observable and measurable — flag vague criteria like "system performs well" for user review
-- The "Phased Approach" section should be customer-specific — Phase 2 should cover their actual integration path, not generic Akka marketing
 - If updating an existing doc (Mode B), preserve content that already follows the guide and only restructure/add what's missing
 
 ### Human Gate

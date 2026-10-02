@@ -15,6 +15,23 @@ A scope of work document aligns the Akka team and the customer on what will be b
 
 Professional but direct. Lead with value, not technology. Use tables over prose for structured information. Every section should earn its place — if it doesn't help the customer decide or the team build, cut it.
 
+Never name specific competitors in the document. Use "alternative frameworks" or "alternative approaches." The doc may circulate internally at the customer — don't give competitors free visibility. The customer already knows who they're evaluating.
+
+No CLI commands in customer-facing text. Use outcome-oriented language: "start the service with a single command", "run the test suite", "all tests pass with no external setup." The audience is stakeholders, not developers.
+
+## Document Stages
+
+Every scope doc progresses through three stages. The header includes the current stage.
+
+| Stage | Purpose | Distribution | Timeline | Open Questions |
+|-------|---------|-------------|----------|----------------|
+| **DRAFT** | Internal working document | Not for distribution | TBD | Populated |
+| **PROPOSAL** | Shared with customer for discussion | Customer stakeholders | TBD or tentative | Drive engagement |
+| **AGREED** | Scope confirmed, ready to execute | All parties | Confirmed with dates | Resolved and removed |
+
+Sections that change between stages are annotated with:
+> This section is confirmed at AGREED stage.
+
 ---
 
 ## Core Principles
@@ -27,7 +44,11 @@ What this means in practice:
 - **All external systems are mocked** — databases, APIs, message brokers, third-party services. Mocks return realistic data with configurable latency and failure rates.
 - **All AI/LLM dependencies are mockable** — if the POC uses Agents, provide a mock model mode that returns fixed responses with realistic latency (~200-500ms). This is critical for performance testing — you cannot benchmark throughput against a real LLM with rate limits and variable latency.
 - **Single command to run** — one command starts everything. No Docker compose, no external databases, no API keys required for the basic demo flow.
-- **Mocks are replaceable by configuration** — swapping a mock for a real service is a URL change in config, not a code change. This makes the Phase 2 path credible.
+- **Mocks are replaceable by configuration** — swapping a mock for a real service is a URL change in config, not a code change. This makes the next steps path credible.
+
+### The Use Case is a Vehicle
+
+The use case is the vehicle to POC Akka. Expected Benefits must reflect what the **platform** brings, not what the use case solves. The customer already knows the value of their use case — what they need to see is what Akka delivers as a platform.
 
 ### Performance Testing with Gatling Enterprise
 
@@ -39,7 +60,7 @@ When scalability/throughput is a goal, the POC includes performance testing usin
   - **Load test** — sustained TPS at target throughput, measuring latency percentiles and error rates
 - **Test against deployed service** — the Akka service and its stub dependencies are deployed to **Akka Serverless**. Gatling runs against the deployed service URL, not localhost. This proves real infrastructure behavior, not just local performance.
 - **Stub services deploy alongside** — mock/stub external dependencies are packaged as a separate Akka service and deployed to the platform. This gives realistic network latency between the main service and its dependencies.
-- **Configurable parameters** — simulations accept system properties for `BASE_URL`, `RATE_PER_SEC`, `DURATION`, `RAMP_UP`, and any domain-specific parameters (e.g., `ACCOUNT_POOL_SIZE` for cache hit ratio tuning)
+- **Configurable parameters** — simulations accept system properties for `BASE_URL`, `RATE_PER_SEC`, `DURATION`, `RAMP_UP`, and any domain-specific parameters
 - **Gatling Enterprise packaging** — simulations are packaged as a fat JAR for upload to Gatling Enterprise, enabling distributed load generation and rich reporting
 
 When performance testing is in scope, the **Deliverables** table should include:
@@ -55,7 +76,7 @@ When performance testing is in scope, the **Deliverables** table should include:
 Before writing the scope doc, use these questions to identify what matters most to this customer. The answers determine which goals to emphasize and which optional sections to include.
 
 ### DevEx Questions
-- Is the customer evaluating Akka against other frameworks (LangChain, Spring, etc.)?
+- Is the customer evaluating Akka against alternative frameworks?
 - Does the customer care about developer onboarding time?
 - Is AI/agent development part of the use case? (If yes, show AI as a first-class component, not a bolt-on)
 - Does the customer value testability? (If yes, emphasize the test kit — no external infra needed)
@@ -79,11 +100,7 @@ Before writing the scope doc, use these questions to identify what matters most 
 - Does the customer want a UI / dashboard? The UI should be minimalistic and map directly to the service's HTTP endpoints — it is a thin functional layer over the API, not a separate design exercise. Every UI action corresponds to an endpoint the service already exposes. Do not invent UI features that don't have a backing endpoint.
 - Is there a specific business process to model, or is the use case abstract?
 
-### Deployment & Phasing Questions
-- **Does the customer need a phased approach?** The default POC model is two phases:
-  - **Phase 1** — runs locally on the developer's laptop and deploys to Akka's Serverless environment. Self-contained with synthetic data, no infosec review needed, fast turnaround. Proves all goals.
-  - **Phase 2** (if needed) — deploys to the customer's own environment via Akka's BYOC (Bring Your Own Cloud). Can be self-contained (same synthetic data in customer infra) and/or integrated with customer's application landscape.
-- Not every engagement needs Phase 2. Ask: does the customer need to run in their own environment for this evaluation, or is Akka's Serverless environment sufficient?
+### Deployment Questions
 - Does the customer have infosec or compliance requirements that affect where the POC runs? (HIPAA, SOC 2, HITRUST, data residency)
 - Is there a preference for cloud provider? (AWS, Azure, GCP, on-prem)
 
@@ -96,33 +113,31 @@ Before writing the scope doc, use these questions to identify what matters most 
 | Field | Description |
 |-------|-------------|
 | **Title** | `{Customer} x Akka — {One-line description}` |
+| **Status** | `DRAFT`, `PROPOSAL`, or `AGREED` (see Document Stages) |
 | **Date** | Month Year |
 | **Version** | `1.0 — Draft for Discussion` (update as it evolves) |
 | **Prepared for** | Customer name, key contacts |
 | **Prepared by** | Akka / Lightbend |
 
-### 2. Table of Contents
+Include the document stages table after the header fields (see Document Stages above).
 
-Auto-generated list of all sections. Place after the header, before the Executive Summary.
-
-### 3. Executive Summary
+### 2. Executive Summary
 
 3-5 sentences. What we're building, why it matters to this customer, and what the expected outcome is. A busy executive should be able to read only this and understand the proposal.
 
 Do NOT list Akka features here. Focus on the customer's problem and the outcome.
 
-### 4. Background
+### 3. Background
 
-Set the context: what the customer does, what system or process this targets, and why now. Include:
+Set the context: what the customer does, what system or process this targets, and why now. This section covers **Current State only** — what exists today (technology landscape, process, scale).
 
-- **Current state** — what exists today (technology, process, pain points)
-- **Pain points** — specific problems this POC addresses
+Do NOT include a Pain Points subsection here. Pain points are obvious to the customer and repeating them in Background is redundant — they appear in Expected Benefits (Section 6) where they are mapped to what Akka delivers.
 
-Use a Mermaid diagram if the current state or pain points benefit from visualization (e.g., a flow showing where latency comes from, or a diagram of a monolithic architecture's bottlenecks).
+Use a Mermaid diagram if the current state benefits from visualization (e.g., a flow showing the existing architecture or process).
 
 If the current state is assumed (pre-sales, no deep discovery yet), say so explicitly: *"Assumed based on initial conversations — to be validated."*
 
-### 5. Proposed Solution
+### 4. Proposed Solution
 
 Bridge between the problem (Background) and the proof points (Goals). This section answers "what are we actually building?" before diving into goals and scope details. Include:
 
@@ -142,7 +157,7 @@ Table with columns: **Step**, **What happens**, **Rules or AI?** (or similar dis
 
 Table with columns: **Decision**, **Rationale**. Document the key choices made in the solution design and why. Examples: "Rules for matching, AI for exceptions", "Synthetic data, self-contained", "Human-in-the-loop for exceptions". This builds confidence that decisions are deliberate, not arbitrary.
 
-### 6. Goals
+### 5. Goals
 
 What the POC proves. Number each goal and explain why it matters to this customer specifically. Typically 2-4 goals. Use the **Goal Discovery** questions above to determine which goals matter most.
 
@@ -154,10 +169,10 @@ Each goal should include:
 - **Why it matters** — paragraph connecting to customer pain point or stated objective
 - **What we demonstrate** — bullet list of specific capabilities shown
 - **How we demonstrate it** — numbered steps for the live demo or walkthrough
-- **Platform comparison notes** (optional) — if the customer is evaluating alternatives, note what the comparison will cover
+- **Platform comparison notes** (optional) — if the customer is evaluating alternatives, note what the comparison will cover. Never name specific competitors.
 
 Good goals are:
-- Tied to a customer pain point from the Background section
+- Tied to a customer pain point
 - Demonstrable in a live walkthrough
 - Measurable (even if qualitatively)
 
@@ -169,6 +184,25 @@ The following are **common themes** that Akka POCs often demonstrate — use the
 - **Quality of Output** — built-in evaluation and regression testing for AI outputs
 - **AI Governance** — runtime-enforced guardrails, audit trail, human-in-the-loop
 
+### 6. Expected Benefits
+
+Maps customer pain points to what **Akka as a platform** delivers. This is NOT about what the use case solves — the customer already knows that. This is about what the platform brings.
+
+Table with columns: **Pain Point**, **What Akka delivers**.
+
+Example rows (adapt to customer):
+
+| Pain Point | What Akka delivers |
+|------------|---------------------|
+| Cross-cloud complexity | Single platform — agent, orchestration, state, and API in one service |
+| Volume overwhelm | Concurrent processing — actor model scales horizontally, same architecture for this use case and core workloads |
+| Consistency risk | Deterministic orchestration — Workflows enforce same steps every time |
+| Compliance exposure | Built-in audit trail & AI governance — logged out of the box, no custom logging to build |
+| Operational blind spots | Observability out of the box — Akka Console and Grafana, zero config |
+| Slow time-to-production | Rapid development — production-grade service in days, one codebase |
+
+Key principle: the use case is a vehicle to POC Akka. Benefits must reflect what Akka brings, not what the use case solves.
+
 ### 7. Scope
 
 Three subsections:
@@ -179,8 +213,6 @@ List the Akka components that will be built, in a table:
 
 | Component | Type | Purpose |
 |-----------|------|---------|
-| `WarehouseProductEntity` | Event Sourced Entity | Inventory per product per warehouse |
-| `ReplenishmentWorkflow` | Workflow | Durable multi-step store replenishment |
 | ... | ... | ... |
 
 #### What's NOT in Scope
@@ -193,10 +225,6 @@ Table mapping real systems to their mock implementations. Every external depende
 
 | Real System | Mock Implementation | Configurable |
 |-------------|---------------------|--------------|
-| Risk Engine | In-memory dataset of sample rules | - |
-| Salesforce | Sample customer records | - |
-| LLM / Model Provider | Fixed responses with realistic latency (~200-500ms) | Response latency, response content |
-| External API | HTTP stub returning mock data | Response latency, failure rate |
 | ... | ... | ... |
 
 See Core Principles above for mocking guidelines (configurable latency/failure, realistic data, LLM mocks for performance testing).
@@ -249,51 +277,50 @@ Table with three columns — tie each criterion back to a goal:
 
 | Goal | Success Criterion | How Measured |
 |------|-------------------|--------------|
-| Prove workflow resilience | Workflow survives simulated crash mid-process | Kill and restart during workflow |
-| Prove latency target | VALIDATION + ENGINE < 250ms p95 | Per-step metrics via OpenTelemetry |
 | ... | ... | ... |
 
 Criteria must be **observable** — something you can demonstrate in a live session or measure in a test run. Avoid vague criteria like "system performs well."
 
-### 11. Phased Approach
+### 11. Timeline
 
-Use the **Deployment & Phasing Questions** from Goal Discovery to determine whether a phased approach is needed. The default model:
+> This section is confirmed at AGREED stage.
 
-#### Phase 1: Self-Contained POC on Akka Serverless (this scope)
+In DRAFT and PROPOSAL stages, include only a milestones table with TBD dates:
 
-The POC runs locally on the developer's laptop and deploys to **Akka's Serverless environment**. No infrastructure provisioning, no VPC setup, no infosec review required. Uses synthetic data and mocked external dependencies.
+| Milestone | Target |
+|-----------|--------|
+| Scope agreed | TBD |
+| POC delivered | TBD |
+| Live demo walkthrough | TBD |
 
-State clearly what Phase 1 proves (map to goals) and what the outcome is.
+Do NOT include duration estimates (e.g., "2 weeks") until scope is agreed. Add:
 
-**Outcome:** One sentence — e.g., "A working system that proves the architecture, demonstrates all goals, and provides the evaluation data needed for the customer's decision."
+*"Timeline will be confirmed once scope is agreed. Key dependency: customer availability for the live demo walkthrough."*
 
-#### Phase 2: BYOC Deployment (if needed)
+At AGREED stage, replace TBD with confirmed dates.
 
-Include Phase 2 only if the customer needs to run in their own environment. Not every engagement requires this — if Akka Serverless is sufficient for the evaluation, say so and omit Phase 2.
+### 12. Next Steps
 
-Phase 2 deploys the service to the customer's environment via Akka's BYOC (Bring Your Own Cloud). It can be **self-contained** (same synthetic data, just running in customer infrastructure) and/or **integrated** with the customer's application landscape. The scope depends on what the customer needs to validate:
+> This section is confirmed at AGREED stage.
 
-- **Self-contained in BYOC** — proves the platform runs in their environment, satisfies infosec, no integration dependencies
-- **Integrated in BYOC** — connects to real data sources, real systems, real compliance frameworks
+What happens after the POC. Keep it simple — two items:
 
-When Phase 2 is included, it typically covers:
+1. **Deploy Akka in customer's environment** — BYOC/BYOK8s into their VPC
+2. **Connect real systems** — replace mocks with actual APIs via configuration change
 
-1. **Provision Akka BYOC** — VPC installation in the customer's environment per infosec requirements
-2. **Connect to real data and systems** (if integrating) — replace mocks with actual integrations
-3. **Implement full governance/compliance requirements** — map customer's compliance framework onto platform capabilities
-4. **Production performance validation** — load testing with real volumes
-5. **Expand to additional use cases** — same architecture, new domains
-6. **Certification path** — SOC 2, HITRUST, etc. as applicable
+Do not add items like PII/PCI sanitization, production performance validation, or "expand to other use cases" — those are sales conversations, not scope doc content. Don't plant the idea of running outside Akka Serverless unless the customer explicitly asks.
 
-This section is strategic — it shows the customer that the POC is a starting point with a clear path to production.
+### 13. Assumptions & Open Questions
 
-### 12. Assumptions & Open Questions
+> This section is confirmed at AGREED stage.
 
 Two parts:
 
 **Assumptions** — what we assumed to be true while writing this scope. Numbered list. The customer should validate or correct these.
 
 **Open Questions** — specific questions for the customer that would affect scope or design. Numbered list.
+
+At AGREED stage, assumptions are validated and open questions are resolved and removed.
 
 End this section with: *"Please validate the assumptions above or suggest changes."*
 
@@ -307,7 +334,7 @@ Include these when they add value for the specific engagement:
 |---------|-----------------|
 | **Non-Functional Requirements** | Performance/scale/availability are key selling points (latency targets, TPS, availability SLAs) |
 | **Multi-Region / HA Strategy** | Enterprise modernization where HA is a requirement |
-| **DevEx / OpsEx Comparison** | Replacing a legacy system — show legacy vs Akka side-by-side |
+| **Platform Comparison** | Customer is evaluating alternatives — show side-by-side without naming competitors |
 | **Throughput Benchmark** | Performance is a primary proof point |
 | **Internal Milestones** | POC has distinct internal build phases (e.g., milestone 1: core workflow, milestone 2: AI agent, milestone 3: dashboard) |
 
@@ -320,10 +347,17 @@ Include these when they add value for the specific engagement:
 
 ## Scope of Work
 
+**Status:** DRAFT
 **Date:** {Month Year}
 **Version:** 1.0 — Draft for Discussion
 **Prepared for:** {Customer} — {Contact names}
 **Prepared by:** Akka / Lightbend
+
+| Stage | Purpose | Distribution |
+|-------|---------|-------------|
+| **DRAFT** | Internal working document | Not for distribution |
+| **PROPOSAL** | Shared with customer for discussion | Customer stakeholders |
+| **AGREED** | Scope confirmed, ready to execute | All parties |
 
 ---
 
@@ -333,12 +367,14 @@ Include these when they add value for the specific engagement:
 2. Background
 3. Proposed Solution
 4. Goals
-5. Scope
-6. Architecture
-7. Deliverables
-8. Success Criteria
-9. Phased Approach
-10. Assumptions & Open Questions
+5. Expected Benefits
+6. Scope
+7. Architecture
+8. Deliverables
+9. Success Criteria
+10. Timeline
+11. Next Steps
+12. Assumptions & Open Questions
 
 ## 1. Executive Summary
 
@@ -350,9 +386,7 @@ Include these when they add value for the specific engagement:
 
 {What exists today — technology, process, scale}
 
-### Pain Points
-
-{Specific problems this POC addresses}
+*Assumed based on initial conversations — to be validated.*
 
 ## 3. Proposed Solution
 
@@ -388,13 +422,17 @@ Include these when they add value for the specific engagement:
 
 **How we demonstrate it:** {Numbered demo steps}
 
-**Platform comparison notes:** {If evaluating alternatives}
-
 ### Goal 2: {Name}
 
 {Same structure as Goal 1}
 
-## 5. Scope
+## 5. Expected Benefits
+
+| Pain Point | What Akka delivers |
+|------------|---------------------|
+| | |
+
+## 6. Scope
 
 ### What's Included
 
@@ -414,7 +452,7 @@ Include these when they add value for the specific engagement:
 
 The POC runs standalone with no external dependencies. All mocks are replaced by configuration change, not code change, when connecting to real systems.
 
-## 6. Architecture
+## 7. Architecture
 
 ### Akka Implementation Diagram
 
@@ -427,7 +465,7 @@ The POC runs standalone with no external dependencies. All mocks are replaced by
 - **Green** — Human actors
 - **Teal** — Web UI
 
-## 7. Deliverables
+## 8. Deliverables
 
 | # | Deliverable | Description |
 |---|-------------|-------------|
@@ -437,29 +475,28 @@ The POC runs standalone with no external dependencies. All mocks are replaced by
 | 4 | Integration tests | End-to-end lifecycle tests |
 | 5 | README with examples | Step-by-step guide to run locally and interact with the API |
 
-## 8. Success Criteria
+## 9. Success Criteria
 
 | Goal | Success Criterion | How Measured |
 |------|-------------------|--------------|
 | | | |
 
-## 9. Phased Approach
+## 10. Timeline
 
-### Phase 1: Self-Contained POC on Akka Serverless (this scope)
+| Milestone | Target |
+|-----------|--------|
+| Scope agreed | TBD |
+| POC delivered | TBD |
+| Live demo walkthrough | TBD |
 
-{What it proves, deployed to Akka Serverless, no infra investment needed}
+*Timeline will be confirmed once scope is agreed. Key dependency: customer availability for the live demo walkthrough.*
 
-**Outcome:** {One sentence}
+## 11. Next Steps
 
-### Phase 2: BYOC Deployment (if needed)
+1. **Deploy Akka in customer's environment** — BYOC/BYOK8s into their VPC
+2. **Connect real systems** — replace mocks with actual APIs via configuration change
 
-1. **Provision Akka BYOC** — {VPC in customer's environment}
-2. **Connect real systems** (if integrating) — replace mocks with actual service APIs
-3. **Implement full governance** — {customer-specific compliance}
-4. **Production validation** — load testing with real volumes
-5. **Expand use cases** — {customer-specific expansion path}
-
-## 10. Assumptions & Open Questions
+## 12. Assumptions & Open Questions
 
 ### Assumptions
 

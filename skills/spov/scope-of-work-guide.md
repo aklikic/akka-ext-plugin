@@ -30,7 +30,7 @@ Every scope doc progresses through three stages. The header includes the current
 | **AGREED** | Scope confirmed, ready to execute | All parties | Confirmed with dates | Resolved and removed |
 
 Sections that change between stages are annotated with:
-> This section is confirmed at AGREED stage.
+*This section is confirmed at AGREED stage.*
 
 ---
 
@@ -283,7 +283,7 @@ Criteria must be **observable** — something you can demonstrate in a live sess
 
 ### 11. Timeline
 
-> This section is confirmed at AGREED stage.
+*This section is confirmed at AGREED stage.*
 
 In DRAFT and PROPOSAL stages, include only a milestones table with TBD dates:
 
@@ -301,7 +301,7 @@ At AGREED stage, replace TBD with confirmed dates.
 
 ### 12. Next Steps
 
-> This section is confirmed at AGREED stage.
+*This section is confirmed at AGREED stage.*
 
 What happens after the POC. Keep it simple — two items:
 
@@ -312,7 +312,7 @@ Do not add items like PII/PCI sanitization, production performance validation, o
 
 ### 13. Assumptions & Open Questions
 
-> This section is confirmed at AGREED stage.
+*This section is confirmed at AGREED stage.*
 
 Two parts:
 

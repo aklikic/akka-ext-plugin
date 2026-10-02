@@ -1,6 +1,6 @@
 {
   "name": "akka-ext",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Skills used as an extension for generating Mermaid diagrams, README documentation, pitch pages, and SPOV scope of work documents for Akka engagements",
   "author": {
     "name": "Alan"

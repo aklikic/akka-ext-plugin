@@ -18,9 +18,10 @@ You **MUST** consider the user input before proceeding (if not empty).
 1. **Load the guide**: Read `skills/spov/scope-of-work-guide.md` from the plugin directory. This defines the required sections, optional sections, conventions, and scaffold.
 
 2. **Gather context**: Look for existing project context in the current working directory:
+   - `source-docs/` — customer-provided background documents, requirements, meeting notes, data samples. All input materials should be organized here.
+   - `sow/` — scope of work output directory. All SOW-related files go here (SCOPE_OF_WORK.md, DOCX export, presentation.html, blocks.json, diagrams/).
    - `README.md` — project overview
-   - `SCOPE_OF_WORK.md`, `poc-scope.md`, or any `*scope*.md` — existing scope doc to update
-   - `docs/` — any background documents
+   - `sow/SCOPE_OF_WORK.md`, or any `*scope*.md` — existing scope doc to update
    - `specs/` or `.akka/specs/` — SDD artifacts if they exist
    - Any Mermaid diagrams or architecture docs
 
@@ -47,7 +48,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Ensure the POC is self-contained: every external dependency (including LLMs) must appear in the Mocked/Stubbed table
    - If the POC uses Agents and performance is a goal, include a mocked-LLM benchmark showing concurrent processing at realistic model latency
 
-6. **Write output**: Save the scope doc to `SCOPE_OF_WORK.md` in the current working directory (or update the existing file).
+6. **Write output**: Save the scope doc to `sow/SCOPE_OF_WORK.md` (create the `sow/` directory if it doesn't exist). All SOW-related outputs go in this directory.
 
 7. **Offer Google Drive export**: Ask the user if they want to export to Google Drive as a branded document. If yes:
 
@@ -62,13 +63,13 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    a. **Convert markdown to blocks + render diagrams**: Always use `md_to_blocks.py` — do NOT manually construct blocks JSON:
       ```
-      python3 skills/spov/md_to_blocks.py SCOPE_OF_WORK.md scope_blocks.json --img-dir diagrams/
+      python3 skills/spov/md_to_blocks.py sow/SCOPE_OF_WORK.md sow/scope_blocks.json --img-dir sow/diagrams/
       ```
       This parses the markdown into blocks, extracts Mermaid code blocks, renders them to PNG via `mmdc`, and outputs `scope_blocks.json` + `diagrams/*.png`. Image blocks use the format `{"k": "image", "path": "...", "alt": "..."}`.
 
    b. **Build styled DOCX**: Use `build_spov_docx.py` from this skill directory (NOT `build_docx.py` from the presentations repo — the presentations version does not support image blocks):
       ```
-      python3 skills/spov/build_spov_docx.py scope_blocks.json "<Customer — Description>.docx" --title "<Customer — Description>" --meta "Akka · <Month Year>"
+      python3 skills/spov/build_spov_docx.py sow/scope_blocks.json "sow/<Customer — Description>.docx" --title "<Customer — Description>" --meta "Akka · <Month Year>"
       ```
       This produces a DOCX with cover page (brand bar, teal eyebrow, gold title), styled headings, tables with gold-rule headers, embedded Mermaid diagram images, callout boxes, and page footer. Outputs `.docx` and `.docx.b64`.
 
@@ -105,14 +106,15 @@ You **MUST** consider the user input before proceeding (if not empty).
       - Open questions from the scope doc appear as yellow mono text at bottom of relevant goal cards
       - Mermaid diagrams use the same diagram from the scope doc's Proposed Solution section
 
-   d. **Write output**: Save to `presentation.html` in the current working directory.
+   d. **Write output**: Save to `sow/presentation.html`.
 
 9. **Report**:
-   - Path to generated/updated scope doc
+   - Directory structure created (`source-docs/`, `sow/`)
+   - Path to generated/updated scope doc (`sow/SCOPE_OF_WORK.md`)
    - Which required sections are complete vs. need customer input
    - Which optional sections were included and why
-   - Google Drive URL or local DOCX path if exported
-   - Path to presentation.html if generated
+   - Google Drive URL or local DOCX path if exported (`sow/*.docx`)
+   - Path to presentation if generated (`sow/presentation.html`)
 
 ## Recommendations
 
